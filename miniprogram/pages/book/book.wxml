@@ -1,25 +1,119 @@
-<view class="page">
-  <view class="glow"></view>
+<view class="stage stage--{{phase}}">
+  <!-- 深空深蓝紫氛围底 -->
+  <view class="stage__bg"></view>
+  <view class="stage__glow"></view>
+  <view class="stage__fog stage__fog--a"></view>
+  <view class="stage__fog stage__fog--b"></view>
+  <view class="stage__fog stage__fog--c"></view>
 
-  <view class="intro" wx:if="{{!revealed}}">
-    <view class="eyebrow">山谷之声</view>
-    <view class="title">答案之书</view>
-    <view class="hint">心里默念一个问题，或只是此刻的心情。\n然后翻开这一页——不是命运，是一面小镜子。</view>
-    <view class="open-btn {{flipping ? 'busy' : ''}}" bindtap="onOpen">翻开一页</view>
+  <!-- 金色微光粒子 -->
+  <view class="particles" aria-hidden="true">
+    <view
+      wx:for="{{particles}}"
+      wx:key="id"
+      class="particle"
+      style="left:{{item.left}}%;top:{{item.top}}%;width:{{item.size}}px;height:{{item.size}}px;opacity:{{item.opacity}};animation-delay:{{item.delay}}ms;animation-duration:{{item.duration}}ms;"
+    ></view>
   </view>
 
-  <view class="stage" wx:else>
-    <view class="book {{flipping ? 'flip' : ''}}">
-      <view class="page-face">
-        <view class="quote-mark">“</view>
-        <view class="quote">{{answer}}</view>
-        <view class="soft">这不是答案，是山谷里的一句低语。</view>
+  <!-- 竖版 9:16：书锚定画面几何中心 -->
+  <view class="stage__inner">
+    <view
+      wx:if="{{phase === 'idle' || phase === 'awakening' || phase === 'flipping'}}"
+      class="book-anchor {{phase === 'flipping' ? 'book-anchor--flipping' : ''}}"
+    >
+    <view
+      class="book-wrap {{phase === 'awakening' ? 'book-wrap--awake' : ''}}"
+      bindtap="onTapBook"
+    >
+      <!-- 封面：深紫烫金古书 -->
+      <view
+        class="book {{phase === 'idle' ? 'book--breathe' : ''}} {{phase === 'awakening' ? 'book--pulse' : ''}}"
+        wx:if="{{phase !== 'flipping'}}"
+      >
+        <view class="book__shadow"></view>
+        <view class="book__spine"></view>
+        <view class="book__edge"></view>
+        <view class="book__cover">
+          <view class="book__frame"></view>
+          <view class="book__ornament book__ornament--top">✦</view>
+          <view class="book__title">答案之书</view>
+          <view class="book__sigil">☽ · ✦ · ☾</view>
+          <view class="book__ornament book__ornament--bottom">✧</view>
+          <view class="book__foil"></view>
+        </view>
+      </view>
+
+      <!-- 翻页：3D 透视纸张翻动（厚度 / 阴影 / 每页略有随机） -->
+      <view class="flip" wx:if="{{phase === 'flipping'}}">
+        <view class="flip__scene">
+          <!-- 下层书页堆（厚度感） -->
+          <view class="flip__bed">
+            <view class="flip__bed-page"></view>
+            <view class="flip__bed-page flip__bed-page--2"></view>
+            <view class="flip__bed-page flip__bed-page--3"></view>
+            <view class="flip__spine-shade"></view>
+          </view>
+          <view class="flip__stack">
+            <view
+              wx:for="{{flipPages}}"
+              wx:key="id"
+              class="flip__leaf flip__leaf--{{item.easeClass}} {{flipIndex === item.id ? 'flip__leaf--turn' : ''}} {{flipIndex > item.id ? 'flip__leaf--gone' : ''}} {{flipIndex < item.id ? 'flip__leaf--wait' : ''}}"
+              style="z-index:{{30 - item.id}};--flip-ms:{{item.duration}}ms;--end-y:{{item.endAngle}}deg;--mid-y:{{item.midAngle}}deg;--curl:{{item.curl}}deg;--lift:{{item.lift}}px;"
+            >
+              <!-- 翻页投射阴影：随角度明暗变化 -->
+              <view class="flip__cast"></view>
+              <view class="flip__sheet">
+                <view class="flip__face flip__face--front">
+                  <view class="flip__grain"></view>
+                  <view class="flip__lines"></view>
+                  <text class="flip__blur">{{item.text}}</text>
+                  <view class="flip__sheen"></view>
+                </view>
+                <!-- 纸张侧边厚度 -->
+                <view class="flip__thickness"></view>
+                <view class="flip__face flip__face--back">
+                  <view class="flip__grain flip__grain--back"></view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view class="flip__hint">命运正在检索…</view>
       </view>
     </view>
+    </view>
 
-    <view class="actions">
-      <view class="btn ghost {{flipping ? 'busy' : ''}}" bindtap="onAgain">再翻一页</view>
-      <view class="btn primary" bindtap="onGoChat">去聊聊</view>
+    <view class="guide" wx:if="{{phase === 'idle'}}">
+      <text class="guide__text">轻触书本，寻找你的答案</text>
+    </view>
+
+    <view class="result" wx:if="{{phase === 'result'}}">
+      <!-- 团团巫师揭晓答案 -->
+      <view class="result__mascot">
+        <view class="result__mascot-glow"></view>
+        <image
+          class="result__otter"
+          src="/images/book/tuantuan-wizard-reveal.png"
+          mode="aspectFit"
+        />
+        <view class="result__whisper">团团来揭晓你的答案～</view>
+      </view>
+      <view class="result__sheet">
+        <view class="result__label">你的答案</view>
+        <view class="result__line">
+          <text
+            wx:for="{{chars}}"
+            wx:key="index"
+            class="result__char {{index < revealedCount ? 'result__char--on' : ''}}"
+          >{{item}}</text>
+          <view class="result__shine"></view>
+        </view>
+      </view>
+      <view class="result__actions">
+        <button class="btn btn--primary" bindtap="onAgain">再问一次</button>
+        <button class="btn btn--ghost" bindtap="onGoChat">带着答案去聊聊</button>
+      </view>
     </view>
   </view>
 </view>

@@ -116,25 +116,217 @@
       background: linear-gradient(135deg, var(--peach2), var(--peach));
       color: white; font-size: 16px; cursor: pointer;
     }
-    .book-card {
-      background: var(--paper);
-      border-radius: 24px;
-      padding: 32px 26px;
-      min-height: 280px;
-      box-shadow: 0 18px 40px rgba(92,83,72,.08);
-      margin: 20px 0 24px;
-    }
-    .qmark { font-size: 48px; color: var(--peach2); line-height: 1; }
-    .quote { font-size: 22px; line-height: 1.7; margin: 8px 0 20px; }
-    .soft { font-size: 13px; color: var(--soft); }
-    .actions { display: flex; gap: 12px; }
     .btn {
-      flex: 1; height: 48px; border: 0; border-radius: 999px;
-      font-size: 16px; cursor: pointer;
-      font-family: inherit;
+      width: 100%; height: 48px; border: 0; border-radius: 999px;
+      font-size: 15px; cursor: pointer; font-family: inherit; margin: 0;
     }
-    .btn.primary { background: linear-gradient(135deg, var(--peach2), var(--peach)); color: white; }
-    .btn.ghost { background: rgba(232,168,124,.18); color: var(--muted); }
+    .btn.primary { background: linear-gradient(135deg, #c9a86c, #e2c48a); color: #2a2038; font-weight: 500; }
+    .btn.ghost { background: rgba(255,255,255,.08); color: rgba(232,224,245,.85); border: 1px solid rgba(212,188,138,.35); }
+    /* 答案之书 · 深紫烫金古书预览 */
+    #book.panel { padding: 0; background: #0a0818; color: #e8e0f5; overflow: hidden; }
+    .bk-stage { position: relative; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .bk-bg {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 90% 60% at 50% 42%, rgba(72,48,120,.55), transparent 68%),
+        radial-gradient(ellipse 50% 35% at 20% 75%, rgba(40,55,120,.35), transparent 70%),
+        linear-gradient(180deg, #14102a 0%, #0c0a1c 48%, #070612 100%);
+    }
+    .bk-glow {
+      position: absolute; left: 50%; top: 42%; width: 240px; height: 240px;
+      transform: translate(-50%,-50%); border-radius: 50%; pointer-events: none;
+      background: radial-gradient(circle, rgba(212,168,90,.16) 0%, rgba(120,80,180,.08) 42%, transparent 70%);
+      animation: bk-glow 5.5s ease-in-out infinite;
+    }
+    @keyframes bk-glow { 0%,100% { opacity:.75; transform:translate(-50%,-50%) scale(.96); } 50% { opacity:1; transform:translate(-50%,-50%) scale(1.04); } }
+    .bk-fog {
+      position: absolute; border-radius: 50%; filter: blur(32px); pointer-events: none;
+      animation: bk-fog 16s ease-in-out infinite alternate;
+    }
+    .bk-fog.a { width: 220px; height: 140px; left: -30px; top: 20%; background: rgba(130,100,190,.22); }
+    .bk-fog.b { width: 200px; height: 130px; right: -20px; bottom: 18%; background: rgba(70,100,170,.18); animation-duration: 20s; }
+    .bk-fog.c { width: 160px; height: 100px; left: 32%; top: 58%; background: rgba(200,160,100,.08); animation-duration: 18s; }
+    @keyframes bk-fog { to { transform: translate(20px, -14px); } }
+    .bk-particles { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+    .bk-dot {
+      position: absolute; border-radius: 50%;
+      background: radial-gradient(circle, #f5e6b8 0%, transparent 70%);
+      box-shadow: 0 0 6px rgba(245,210,140,.5);
+      animation: bk-dot ease-in-out infinite;
+    }
+    @keyframes bk-dot {
+      0%,100% { transform: translateY(0) scale(1); opacity: .2; }
+      50% { transform: translateY(-18px) scale(1.2); opacity: .9; }
+    }
+    .bk-inner {
+      position: relative; z-index: 2; width: 100%; height: 100%;
+      padding: 0; box-sizing: border-box;
+    }
+    #bkIdle, #bkFlip {
+      position: absolute; left: 50%; top: 43%; transform: translate(-50%, -50%);
+      width: 78%; max-width: 280px; z-index: 3;
+    }
+    #bkIdle { display: flex; flex-direction: column; align-items: center; }
+    .bk-book {
+      width: 100%; aspect-ratio: 3/4; max-height: 66vh;
+      min-width: 200px; min-height: 268px; cursor: pointer; position: relative;
+    }
+    .bk-book.breathe { animation: bk-breathe-scale 4.8s ease-in-out infinite; }
+    .bk-book.pulse { animation: bk-pulse .5s cubic-bezier(.34,1.2,.64,1); }
+    @keyframes bk-breathe-scale {
+      0%,100% { transform: translateY(0) scale(.98); }
+      50% { transform: translateY(-10px) scale(1.02); }
+    }
+    @keyframes bk-pulse {
+      45% { filter: brightness(1.28); box-shadow: 0 0 40px rgba(245,210,140,.55), 0 0 70px rgba(140,100,210,.35); }
+    }
+    .bk-cover {
+      width: 100%; height: 100%; border-radius: 8px 12px 12px 8px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background:
+        linear-gradient(145deg, rgba(245,220,160,.18) 0%, transparent 38%),
+        linear-gradient(180deg, #3b2a62 0%, #2a1d4a 42%, #1a1232 100%);
+      border: 1.5px solid rgba(226,196,138,.65);
+      box-shadow:
+        0 20px 44px rgba(0,0,0,.5), 0 0 28px rgba(180,140,80,.12),
+        inset 0 0 0 8px rgba(212,188,138,.1);
+      color: #f3d9a0; letter-spacing: .36em; font-size: 22px; position: relative; overflow: hidden;
+    }
+    .bk-cover::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(115deg, transparent 32%, rgba(245,220,160,.22) 48%, transparent 64%);
+      background-size: 240% 100%; animation: bk-foil 6s ease-in-out infinite;
+    }
+    @keyframes bk-foil { 0%,100% { background-position: 130% 0; } 50% { background-position: -30% 0; } }
+    .bk-sigil { font-size: 14px; letter-spacing: .22em; margin-top: 12px; opacity: .8; position: relative; z-index: 1; }
+    .bk-guide {
+      position: absolute; left: 0; right: 0; top: 78%;
+      text-align: center; z-index: 3;
+      font-size: 13px; letter-spacing: .14em; color: rgba(230,218,245,.78);
+      animation: bk-breathe 2.8s ease-in-out infinite;
+    }
+    @keyframes bk-breathe { 0%,100% { opacity: .35; } 50% { opacity: .95; } }
+    .bk-flip-wrap { width: 100%; aspect-ratio: 3/4; max-height: 68vh; display: flex; flex-direction: column; align-items: center; }
+    .bk-flip {
+      width: 100%; flex: 1; position: relative; perspective: 1600px; perspective-origin: 50% 45%;
+      transform-style: preserve-3d; min-height: 240px;
+    }
+    .bk-bed { position: absolute; inset: 0; transform-style: preserve-3d; }
+    .bk-bed-page {
+      position: absolute; inset: 0; border-radius: 8px 12px 12px 8px;
+      background: linear-gradient(105deg, rgba(255,255,255,.25), transparent 30%), linear-gradient(180deg, #f3ebe0, #e5d9c6);
+      border: 1px solid rgba(170,150,110,.35); box-shadow: 0 12px 28px rgba(0,0,0,.35);
+    }
+    .bk-bed-page.p2 { transform: translate3d(2px,3px,-4px); opacity: .92; }
+    .bk-bed-page.p3 {
+      transform: translate3d(4px,6px,-8px); opacity: .88;
+      background: linear-gradient(180deg, #3b2a62, #1a1232); border-color: rgba(226,196,138,.35);
+    }
+    .bk-page {
+      position: absolute; inset: 0; border-radius: 6px 10px 10px 6px;
+      transform-origin: left center; transform-style: preserve-3d;
+      opacity: 0; font-size: 16px;
+      --end-y: -178deg; --mid-y: -92deg; --curl: 0deg; --lift: 18px;
+      --ease: cubic-bezier(.22,.72,.28,1); --flip-ms: 400ms;
+    }
+    .bk-page.on {
+      opacity: 1;
+      animation: bk-paper-flip var(--flip-ms) var(--ease) forwards;
+    }
+    @keyframes bk-paper-flip {
+      0% { transform: rotateY(0) rotateZ(0) translateZ(0); }
+      18% { transform: rotateY(-32deg) rotateZ(calc(var(--curl) * .6)) translateZ(calc(var(--lift) * .35)); }
+      48% { transform: rotateY(var(--mid-y)) rotateZ(var(--curl)) translateZ(var(--lift)); }
+      78% { transform: rotateY(-145deg) rotateZ(calc(var(--curl) * .4)) translateZ(calc(var(--lift) * .45)); }
+      100% { transform: rotateY(var(--end-y)) rotateZ(calc(var(--curl) * -.25)) translateZ(2px); }
+    }
+    .bk-sheet {
+      position: absolute; inset: 0; transform-style: preserve-3d; border-radius: 6px 10px 10px 6px;
+    }
+    .bk-face {
+      position: absolute; inset: 0; border-radius: 6px 10px 10px 6px;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .bk-face.front {
+      background: linear-gradient(105deg, rgba(255,255,255,.4), transparent 32%), linear-gradient(180deg, #f8f2e8, #e2d4be);
+      border: 1px solid rgba(180,160,120,.45);
+      box-shadow: 0 12px 28px rgba(0,0,0,.32); color: rgba(70,55,90,.38); letter-spacing: .45em; filter: blur(3px);
+    }
+    .bk-face.back {
+      background: linear-gradient(180deg, #e6dccb, #d4c6b0); transform: rotateY(180deg);
+      border: 1px solid rgba(150,130,95,.35);
+    }
+    .bk-thick {
+      position: absolute; left: 0; top: 1%; bottom: 1%; width: 5px;
+      transform: translateX(-50%) rotateY(90deg); transform-origin: center;
+      background: linear-gradient(180deg, #f0e6d4, #a89068); opacity: .15;
+    }
+    .bk-page.on .bk-thick { animation: bk-thick var(--flip-ms) var(--ease) forwards; }
+    @keyframes bk-thick { 0%,100% { opacity: .1; } 45% { opacity: .9; } }
+    .bk-cast {
+      position: absolute; left: 4%; right: -6%; top: 6%; bottom: 4%; border-radius: 8px;
+      background: radial-gradient(ellipse at left center, rgba(0,0,0,.45), transparent 70%);
+      transform-origin: left center; filter: blur(8px); opacity: .2; z-index: -1;
+    }
+    .bk-page.on .bk-cast { animation: bk-cast var(--flip-ms) var(--ease) forwards; }
+    @keyframes bk-cast {
+      0% { opacity: .2; transform: scaleX(1); }
+      45% { opacity: .7; transform: scaleX(.55) translateX(8%); }
+      100% { opacity: .05; transform: scaleX(.2); }
+    }
+    .bk-page.on .bk-face.front { animation: bk-shade var(--flip-ms) var(--ease) forwards; }
+    @keyframes bk-shade { 0% { filter: blur(3px) brightness(1.05); } 40% { filter: blur(3px) brightness(1.12); } 100% { filter: blur(3.5px) brightness(.55); } }
+    .bk-hint { margin-top: 14px; font-size: 12px; color: rgba(230,218,245,.55); letter-spacing: .16em; animation: bk-breathe 1.6s ease-in-out infinite; }
+    .bk-result {
+      position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%);
+      width: 88%; max-width: 300px; z-index: 4;
+      display: flex; flex-direction: column; align-items: center;
+      animation: bk-in .6s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes bk-in { from { opacity: 0; transform: translate(-50%, -46%) scale(.92); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+    .bk-mascot {
+      position: relative; width: 100%; display: flex; flex-direction: column; align-items: center;
+      animation: bk-otter-in .7s cubic-bezier(.22,1.2,.36,1) both;
+    }
+    @keyframes bk-otter-in { from { opacity: 0; transform: translateY(-18px) scale(.88); } }
+    .bk-mascot-glow {
+      position: absolute; left: 50%; top: 48%; width: 140px; height: 140px;
+      transform: translate(-50%,-50%); border-radius: 50%; pointer-events: none;
+      background: radial-gradient(circle, rgba(245,210,140,.35), rgba(140,100,200,.12) 45%, transparent 70%);
+      animation: bk-otter-glow 2.8s ease-in-out infinite;
+    }
+    @keyframes bk-otter-glow { 50% { opacity: 1; transform: translate(-50%,-50%) scale(1.08); } }
+    .bk-otter {
+      position: relative; z-index: 1; width: 140px; height: 180px; object-fit: contain;
+      animation: bk-otter-float 3.6s ease-in-out .7s infinite;
+    }
+    @keyframes bk-otter-float { 50% { transform: translateY(-6px); } }
+    .bk-whisper {
+      margin: -4px 0 8px; padding: 5px 14px; border-radius: 999px; font-size: 11px;
+      letter-spacing: .08em; color: rgba(243,217,160,.92);
+      background: rgba(40,28,70,.45); border: 1px solid rgba(226,196,138,.35);
+    }
+    .bk-sheet {
+      width: 100%; min-height: 120px; padding: 24px 20px; border-radius: 14px;
+      background: linear-gradient(165deg, #f7f1e6, #ebe2d2);
+      box-shadow: 0 18px 44px rgba(0,0,0,.42); text-align: center;
+      animation: bk-sheet-in .55s cubic-bezier(.22,1,.36,1) .25s both;
+    }
+    @keyframes bk-sheet-in { from { opacity: 0; transform: translateY(12px) scale(.94); } }
+    .bk-label { font-size: 11px; letter-spacing: .35em; color: rgba(100,85,70,.55); margin-bottom: 20px; }
+    .bk-line { position: relative; display: inline-flex; flex-wrap: wrap; justify-content: center; font-size: 22px; color: #3a2f4a; line-height: 1.6; }
+    .bk-char { opacity: 0; transform: translateY(6px); transition: opacity .35s cubic-bezier(.22,1,.36,1), transform .35s cubic-bezier(.22,1,.36,1); }
+    .bk-char.on { opacity: 1; transform: none; }
+    .bk-shine {
+      position: absolute; inset: -4px -16px; pointer-events: none;
+      background: linear-gradient(105deg, transparent 30%, rgba(245,220,160,.45) 50%, transparent 70%);
+      background-size: 220% 100%; animation: bk-shine 2.4s cubic-bezier(.4,0,.2,1) .4s 2;
+      mix-blend-mode: soft-light;
+    }
+    @keyframes bk-shine { to { background-position: -40% 0; } }
+    .bk-actions { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .bk-hidden { display: none !important; }
     .card {
       background: var(--paper);
       border-radius: 22px;
@@ -213,22 +405,55 @@
       </section>
 
       <section class="panel" id="book">
-        <div class="eyebrow">山谷之声</div>
-        <h1 class="title">答案之书</h1>
-        <p class="desc" id="bookIntro">心里默念一个问题，或只是此刻的心情。
-然后翻开这一页——不是命运，是一面小镜子。</p>
-        <div id="bookBlank">
-          <button class="btn primary" style="width:100%" id="openBtn" type="button">翻开一页</button>
-        </div>
-        <div id="bookResult" hidden>
-          <div class="book-card">
-            <div class="qmark">“</div>
-            <div class="quote" id="quote"></div>
-            <div class="soft">这不是答案，是山谷里的一句低语。</div>
-          </div>
-          <div class="actions">
-            <button class="btn ghost" id="againBtn" type="button">再翻一页</button>
-            <button class="btn primary" id="goChatBtn" type="button">去聊聊</button>
+        <div class="bk-stage">
+          <div class="bk-bg"></div>
+          <div class="bk-glow"></div>
+          <div class="bk-fog a"></div>
+          <div class="bk-fog b"></div>
+          <div class="bk-fog c"></div>
+          <div class="bk-particles" id="bkParticles"></div>
+          <div class="bk-inner">
+            <div class="bk-guide" id="bkGuide">轻触书本，寻找你的答案</div>
+            <div id="bkIdle">
+              <div class="bk-book breathe" id="bkBook" role="button" tabindex="0">
+                <div class="bk-cover">答案之书<div class="bk-sigil">☽ · ✦ · ☾</div></div>
+              </div>
+            </div>
+            <div id="bkFlip" class="bk-hidden">
+              <div class="bk-flip-wrap">
+                <div class="bk-flip">
+                  <div class="bk-bed">
+                    <div class="bk-bed-page"></div>
+                    <div class="bk-bed-page p2"></div>
+                    <div class="bk-bed-page p3"></div>
+                  </div>
+                  <div class="bk-page" id="bkPage">
+                    <div class="bk-cast"></div>
+                    <div class="bk-sheet">
+                      <div class="bk-face front" id="bkPageText">······</div>
+                      <div class="bk-thick"></div>
+                      <div class="bk-face back"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="bk-hint">命运正在检索…</div>
+              </div>
+            </div>
+            <div id="bkResult" class="bk-result bk-hidden">
+              <div class="bk-mascot">
+                <div class="bk-mascot-glow"></div>
+                <img class="bk-otter" src="/art/book/tuantuan-wizard-reveal.png" alt="团团巫师" />
+                <div class="bk-whisper">团团来揭晓你的答案～</div>
+              </div>
+              <div class="bk-sheet">
+                <div class="bk-label">你的答案</div>
+                <div class="bk-line" id="bkLine"><span class="bk-shine"></span></div>
+              </div>
+              <div class="bk-actions">
+                <button class="btn primary" id="againBtn" type="button">再问一次</button>
+                <button class="btn ghost" id="goChatBtn" type="button">带着答案去聊聊</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -261,40 +486,71 @@
     </nav>
   </div>
   <div class="note">这是波次1界面验收页（与小程序同结构）。开发者工具若仍卡网络，可先在这里验收交互与文案。</div>
+  <script src="/answers-book.js"></script>
   <script>
-    const ANSWERS = [
-      "先停一下。你已经走得很用力了。","答案也许不在外面，而在你刚才犹豫的那一秒。","今天，允许自己慢半拍。",
-      "有些事不用立刻想清楚。","你比自己以为的更有力气。","把肩膀放下来一点。","不是你不够好，是这一段路太挤。",
-      "可以先照顾呼吸，再照顾问题。","你值得被温柔地对待，包括被自己。","别急着给今天下结论。",
-      "留一点空白给自己，不算浪费。","难过可以存在，它不会把你定义掉。","你已经在找路了，这就算开始。",
-      "有人懂当然好；没有的时候，我也在。","先喝口水，再继续想。","不必证明什么，才有资格休息。",
-      "小小的一步，也算往前。","把「应该」先放在门口。","你的感受是认真的，值得被听完。",
-      "混乱里也可以只抓住一件小事。","今晚的月亮不催你交答案。","允许自己说：我还不知道。",
-      "你不是一个人在雾里。","有些温柔，要先给自己。","事情可以拆小，再一个一个碰。",
-      "累了就先停，路还在。","你的边界，也可以是一种爱自己。","别和昨天的自己较劲。",
-      "现在这样就够当作起点。","听一听身体在说什么。","不必笑着撑过所有时刻。",
-      "慢下来，才听得见自己。","你已经做得比你记得的更多。","把期待调小一点，把呼吸调匀一点。",
-      "可以求助，这不是软弱。","今天的你，不用成为任何人。","把心里那句重话，先改成轻一点的。",
-      "有些告别，是为了腾地方给新的。","你配拥有不解释的片刻。","先安放自己，再回应世界。",
-      "迷茫不是失败，是还在辨认方向。","给情绪一个座位，别把它赶出去。","你走的路，别人未必看得见，但它是真的。",
-      "轻一点对自己说话。","答案会迟到，陪伴可以准时。","留下力气给明天早晨。",
-      "你的节奏，不必对齐别人的钟。","有时候，不行动也是一种照顾。","把「完美」换成「足够」。",
-      "你正在学会站在自己这边。","风会停的，你也可以靠一靠。","不必一次走完全程。",
-      "心里的结，可以慢慢解。","你比焦虑更宽广一点。","今晚，只要求自己安稳一点。",
-      "被理解之前，先被自己接住。","犹豫，说明你在认真对待。","把目光从结果上挪开一会儿。",
-      "山谷很大，容得下你的沉默。","你可以改变主意，也可以改变步伐。","先完成「在场」，再谈「做好」。",
-      "有光的地方，通常也有影子，都没关系。","你的故事还在写，别急着翻到结局。","累的时候，诚实比坚强更有用。",
-      "让一句好听的话，在心里多停一秒。","外面嘈杂时，回到呼吸就好。","你有权把今天过成很小的一天。",
-      "不必赶在情绪前面奔跑。","柔软不是退让，是另一种力量。","把担心写成一行字，它会轻一点。",
-      "你配得到耐心，包括过程中的耐心。","有些答案，要在睡醒后才露面。","先活过这一小时，也算赢。",
-      "你不是拖延，你是在积攒勇气。","让身体找一个舒服的姿势。","世界很大，你的感受也可以很大。",
-      "把「我必须」改成「我可以试试」。","你已经在照顾自己了，哪怕只是打开这里。","这页不是命运，是一面小镜子。",
-      "若愿说，我在；若不愿，也没关系。"
+    const ANSWERS = window.ANSWER_BOOK_POOL || ["慢慢来，不着急", "你已经够好了"];
+    const BLUR = ["······","正在翻阅","命运低语","轻轻翻页","星尘落定"];
+    const FLIP_DURATIONS = [260, 320, 400, 520, 700];
+    const FLIP_GAPS = [220, 270, 340, 450, 620];
+    const FLIP_EASES = [
+      "cubic-bezier(0.22, 0.72, 0.28, 1)",
+      "cubic-bezier(0.18, 0.85, 0.32, 1)",
+      "cubic-bezier(0.25, 0.6, 0.2, 1)",
+      "cubic-bezier(0.15, 0.78, 0.35, 0.98)",
     ];
+    function rand(min, max) { return min + Math.random() * (max - min); }
+    const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+    const GUEST_KEY = "vv_answer_book_guest";
+    /** 预览页：localStorage 模拟绑定。控制台执行 localStorage.setItem('vv_user_id','demo') 可测一年不重复 */
+    function getBoundUserId() {
+      return localStorage.getItem("vv_user_id") || "";
+    }
+    function drawAnswer() {
+      const bound = !!getBoundUserId();
+      const key = bound ? `vv_answer_book_user_${getBoundUserId()}` : GUEST_KEY;
+      const now = Date.now();
+      let state;
+      try { state = JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) { state = {}; }
+      if (!state.used || typeof state.used !== "object") state.used = {};
+      if (bound) {
+        const pruned = {};
+        Object.keys(state.used).forEach((id) => {
+          if (now - Number(state.used[id]) <= YEAR_MS) pruned[id] = state.used[id];
+        });
+        state.used = pruned;
+      }
+      const available = [];
+      for (let i = 0; i < ANSWERS.length; i++) {
+        if (!(String(i) in state.used)) available.push(i);
+      }
+      let index;
+      if (available.length) {
+        index = available[Math.floor(Math.random() * available.length)];
+      } else if (bound) {
+        const ids = Object.keys(state.used).sort((a, b) => state.used[a] - state.used[b]);
+        index = Number(ids[0]) || 0;
+      } else {
+        state.used = {};
+        index = Math.floor(Math.random() * ANSWERS.length);
+      }
+      state.used[String(index)] = now;
+      localStorage.setItem(key, JSON.stringify(state));
+      return ANSWERS[index];
+    }
     let current = "";
+    let bookBusy = false;
     const h = new Date().getHours();
     const hourLabel = h >= 5 && h < 10 ? "清晨了" : h >= 10 && h < 17 ? "午后了" : h >= 17 && h < 19 ? "傍晚了" : "夜里了";
     document.getElementById("hourPill").textContent = hourLabel;
+
+    const particles = document.getElementById("bkParticles");
+    for (let i = 0; i < 28; i++) {
+      const d = document.createElement("div");
+      d.className = "bk-dot";
+      const size = 2 + Math.floor(Math.random() * 3);
+      d.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${size}px;height:${size}px;animation-delay:${Math.random()*4}s;animation-duration:${5+Math.random()*5}s;opacity:${0.25+Math.random()*0.5}`;
+      particles.appendChild(d);
+    }
 
     const SPLASH_FILE = {
       sunny: "splash-01-sunny.jpg", rain: "splash-02-rain.jpg", snow: "splash-03-snow.jpg",
@@ -330,16 +586,60 @@
       });
     });
 
-    function pick() {
-      const pool = ANSWERS.filter((a) => a !== current);
-      current = (pool.length ? pool : ANSWERS)[Math.floor(Math.random() * (pool.length || ANSWERS.length))];
-      document.getElementById("quote").textContent = current;
-      document.getElementById("bookBlank").hidden = true;
-      document.getElementById("bookResult").hidden = false;
-      document.getElementById("bookIntro").hidden = true;
+    function showPhase(name) {
+      document.getElementById("bkIdle").classList.toggle("bk-hidden", name !== "idle");
+      document.getElementById("bkFlip").classList.toggle("bk-hidden", name !== "flipping");
+      document.getElementById("bkResult").classList.toggle("bk-hidden", name !== "result");
+      const guide = document.getElementById("bkGuide");
+      if (guide) guide.classList.toggle("bk-hidden", name !== "idle");
     }
-    document.getElementById("openBtn").onclick = pick;
-    document.getElementById("againBtn").onclick = pick;
+    async function runBook() {
+      if (bookBusy) return;
+      bookBusy = true;
+      const book = document.getElementById("bkBook");
+      book.classList.remove("breathe");
+      book.classList.add("pulse");
+      if (navigator.vibrate) navigator.vibrate(30);
+      current = drawAnswer();
+      await new Promise((r) => setTimeout(r, 500));
+      showPhase("flipping");
+      const page = document.getElementById("bkPage");
+      const pageText = document.getElementById("bkPageText");
+      for (let i = 0; i < 5; i++) {
+        const dur = Math.round(FLIP_DURATIONS[i] + rand(-45, 55));
+        const gap = Math.round(FLIP_GAPS[i] + rand(-35, 40));
+        pageText.textContent = BLUR[Math.floor(Math.random() * BLUR.length)];
+        page.style.setProperty("--flip-ms", dur + "ms");
+        page.style.setProperty("--end-y", Math.round(rand(-186, -168)) + "deg");
+        page.style.setProperty("--mid-y", Math.round(rand(-102, -86)) + "deg");
+        page.style.setProperty("--curl", rand(-1.2, 1.2).toFixed(2) + "deg");
+        page.style.setProperty("--lift", Math.round(rand(14, 28)) + "px");
+        page.style.setProperty("--ease", FLIP_EASES[Math.floor(Math.random() * FLIP_EASES.length)]);
+        page.classList.remove("on");
+        void page.offsetWidth;
+        page.classList.add("on");
+        await new Promise((r) => setTimeout(r, gap));
+      }
+      await new Promise((r) => setTimeout(r, 220));
+      showPhase("result");
+      const line = document.getElementById("bkLine");
+      line.innerHTML = '<span class="bk-shine"></span>';
+      [...current].forEach((ch, i) => {
+        const span = document.createElement("span");
+        span.className = "bk-char";
+        span.textContent = ch;
+        line.appendChild(span);
+        setTimeout(() => span.classList.add("on"), 420 + i * 70);
+      });
+      bookBusy = false;
+    }
+    document.getElementById("bkBook").onclick = runBook;
+    document.getElementById("againBtn").onclick = () => {
+      if (bookBusy) return;
+      document.getElementById("bkBook").classList.add("breathe");
+      document.getElementById("bkBook").classList.remove("pulse");
+      showPhase("idle");
+    };
     document.getElementById("goChatBtn").onclick = () => {
       const msgs = document.getElementById("msgs");
       const row = document.createElement("div");
