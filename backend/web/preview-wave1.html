@@ -279,43 +279,44 @@
     @keyframes bk-shade { 0% { filter: blur(3px) brightness(1.05); } 40% { filter: blur(3px) brightness(1.12); } 100% { filter: blur(3.5px) brightness(.55); } }
     .bk-hint { margin-top: 14px; font-size: 12px; color: rgba(230,218,245,.55); letter-spacing: .16em; animation: bk-breathe 1.6s ease-in-out infinite; }
     .bk-result {
-      position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%);
-      width: 88%; max-width: 300px; z-index: 4;
+      position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%);
+      width: 90%; max-width: 310px; z-index: 4;
       display: flex; flex-direction: column; align-items: center;
       animation: bk-in .6s cubic-bezier(.22,1,.36,1) both;
     }
     @keyframes bk-in { from { opacity: 0; transform: translate(-50%, -46%) scale(.92); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
-    .bk-mascot {
-      position: relative; width: 100%; display: flex; flex-direction: column; align-items: center;
-      animation: bk-otter-in .7s cubic-bezier(.22,1.2,.36,1) both;
+    .bk-card {
+      position: relative; width: 100%; min-height: 210px; border-radius: 16px; overflow: visible;
+      background: linear-gradient(165deg, #f7f1e6, #ebe2d2);
+      border: 1px solid rgba(212,188,138,.5);
+      box-shadow: 0 18px 44px rgba(0,0,0,.42);
+      animation: bk-sheet-in .55s cubic-bezier(.22,1,.36,1) both;
     }
-    @keyframes bk-otter-in { from { opacity: 0; transform: translateY(-18px) scale(.88); } }
+    @keyframes bk-sheet-in { from { opacity: 0; transform: translateY(12px) scale(.94); } }
+    .bk-body {
+      position: relative; z-index: 2; padding: 24px 100px 28px 20px; min-height: 180px;
+      display: flex; flex-direction: column; align-items: flex-start; justify-content: center; box-sizing: border-box;
+    }
+    .bk-mascot {
+      position: absolute; right: -6px; bottom: -14px; width: 110px; height: 140px; z-index: 3;
+      pointer-events: none; animation: bk-otter-in .7s cubic-bezier(.22,1.2,.36,1) .15s both;
+    }
+    @keyframes bk-otter-in { from { opacity: 0; transform: translate(8px, 12px) scale(.86); } }
     .bk-mascot-glow {
-      position: absolute; left: 50%; top: 48%; width: 140px; height: 140px;
+      position: absolute; left: 50%; top: 55%; width: 100px; height: 100px;
       transform: translate(-50%,-50%); border-radius: 50%; pointer-events: none;
-      background: radial-gradient(circle, rgba(245,210,140,.35), rgba(140,100,200,.12) 45%, transparent 70%);
+      background: radial-gradient(circle, rgba(245,210,140,.4), rgba(140,100,200,.1) 50%, transparent 72%);
       animation: bk-otter-glow 2.8s ease-in-out infinite;
     }
     @keyframes bk-otter-glow { 50% { opacity: 1; transform: translate(-50%,-50%) scale(1.08); } }
     .bk-otter {
-      position: relative; z-index: 1; width: 140px; height: 180px; object-fit: contain;
+      position: relative; z-index: 1; width: 110px; height: 140px; object-fit: contain;
+      filter: drop-shadow(0 6px 10px rgba(40,30,60,.28));
       animation: bk-otter-float 3.6s ease-in-out .7s infinite;
     }
-    @keyframes bk-otter-float { 50% { transform: translateY(-6px); } }
-    .bk-whisper {
-      margin: -4px 0 8px; padding: 5px 14px; border-radius: 999px; font-size: 11px;
-      letter-spacing: .08em; color: rgba(243,217,160,.92);
-      background: rgba(40,28,70,.45); border: 1px solid rgba(226,196,138,.35);
-    }
-    .bk-sheet {
-      width: 100%; min-height: 120px; padding: 24px 20px; border-radius: 14px;
-      background: linear-gradient(165deg, #f7f1e6, #ebe2d2);
-      box-shadow: 0 18px 44px rgba(0,0,0,.42); text-align: center;
-      animation: bk-sheet-in .55s cubic-bezier(.22,1,.36,1) .25s both;
-    }
-    @keyframes bk-sheet-in { from { opacity: 0; transform: translateY(12px) scale(.94); } }
-    .bk-label { font-size: 11px; letter-spacing: .35em; color: rgba(100,85,70,.55); margin-bottom: 20px; }
-    .bk-line { position: relative; display: inline-flex; flex-wrap: wrap; justify-content: center; font-size: 22px; color: #3a2f4a; line-height: 1.6; }
+    @keyframes bk-otter-float { 50% { transform: translateY(-5px); } }
+    .bk-label { font-size: 11px; letter-spacing: .35em; color: rgba(100,85,70,.55); margin-bottom: 14px; }
+    .bk-line { position: relative; display: inline-flex; flex-wrap: wrap; justify-content: flex-start; font-size: 22px; color: #3a2f4a; line-height: 1.6; }
     .bk-char { opacity: 0; transform: translateY(6px); transition: opacity .35s cubic-bezier(.22,1,.36,1), transform .35s cubic-bezier(.22,1,.36,1); }
     .bk-char.on { opacity: 1; transform: none; }
     .bk-shine {
@@ -325,7 +326,7 @@
       mix-blend-mode: soft-light;
     }
     @keyframes bk-shine { to { background-position: -40% 0; } }
-    .bk-actions { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .bk-actions { margin-top: 28px; display: flex; flex-direction: column; gap: 10px; width: 100%; }
     .bk-hidden { display: none !important; }
     .card {
       background: var(--paper);
@@ -440,14 +441,15 @@
               </div>
             </div>
             <div id="bkResult" class="bk-result bk-hidden">
-              <div class="bk-mascot">
-                <div class="bk-mascot-glow"></div>
-                <img class="bk-otter" src="/art/book/tuantuan-wizard-reveal.png" alt="团团巫师" />
-                <div class="bk-whisper">团团来揭晓你的答案～</div>
-              </div>
-              <div class="bk-sheet">
-                <div class="bk-label">你的答案</div>
-                <div class="bk-line" id="bkLine"><span class="bk-shine"></span></div>
+              <div class="bk-card">
+                <div class="bk-body">
+                  <div class="bk-label">你的答案</div>
+                  <div class="bk-line" id="bkLine"><span class="bk-shine"></span></div>
+                </div>
+                <div class="bk-mascot">
+                  <div class="bk-mascot-glow"></div>
+                  <img class="bk-otter" src="/art/book/tuantuan-wizard-reveal.png" alt="团团巫师" />
+                </div>
               </div>
               <div class="bk-actions">
                 <button class="btn primary" id="againBtn" type="button">再问一次</button>

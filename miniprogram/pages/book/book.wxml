@@ -89,25 +89,26 @@
     </view>
 
     <view class="result" wx:if="{{phase === 'result'}}">
-      <!-- 团团巫师揭晓答案 -->
-      <view class="result__mascot">
-        <view class="result__mascot-glow"></view>
-        <image
-          class="result__otter"
-          src="/images/book/tuantuan-wizard-reveal.png"
-          mode="aspectFit"
-        />
-        <view class="result__whisper">团团来揭晓你的答案～</view>
-      </view>
-      <view class="result__sheet">
-        <view class="result__label">你的答案</view>
-        <view class="result__line">
-          <text
-            wx:for="{{chars}}"
-            wx:key="index"
-            class="result__char {{index < revealedCount ? 'result__char--on' : ''}}"
-          >{{item}}</text>
-          <view class="result__shine"></view>
+      <!-- 答案 + 团团同一画面：团团在答案卡右下 -->
+      <view class="result__card">
+        <view class="result__body">
+          <view class="result__label">你的答案</view>
+          <view class="result__line">
+            <text
+              wx:for="{{chars}}"
+              wx:key="index"
+              class="result__char {{index < revealedCount ? 'result__char--on' : ''}}"
+            >{{item}}</text>
+            <view class="result__shine"></view>
+          </view>
+        </view>
+        <view class="result__mascot">
+          <view class="result__mascot-glow"></view>
+          <image
+            class="result__otter"
+            src="/images/book/tuantuan-wizard-reveal.png"
+            mode="aspectFit"
+          />
         </view>
       </view>
       <view class="result__actions">
