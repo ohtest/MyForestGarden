@@ -1,63 +1,94 @@
-<view class="page {{hour}} {{sky}}">
-  <view class="world">
-    <block wx:for="{{plates}}" wx:key="index">
-      <image
-        wx:if="{{item}}"
-        class="plate {{front === index ? 'on' : ''}}"
-        src="{{item}}"
-        data-index="{{index}}"
-        binderror="onPlateError"
-        mode="aspectFill"
-      ></image>
-    </block>
-    <view wx:if="{{sky === 'partly' || sky === 'cloudy'}}" class="clouds"></view>
-    <view wx:if="{{sky === 'clear' && hour !== 'night'}}" class="sunbeam"></view>
-    <view wx:if="{{(hour === 'dusk' || hour === 'night')}}" class="lamp-glow"></view>
+<view class="valley sky-{{scene.sky}} scene-{{scene.scene}} ground-{{scene.ground}} weather-{{scene.weather}} light-{{scene.lightSource}} {{lowPower ? 'low' : ''}} {{scene.campfire === 'none' ? 'no-fire' : 'has-fire'}} {{fireBoost ? 'fire-boost' : ''}}" bindtap="onStageTap">
+  <view class="sky"></view>
+  <view class="sun" style="transform: rotate({{scene.sunAngle}}deg);"></view>
+  <view class="stars" wx:if="{{scene.sky === 'night' || scene.sky === 'late' || scene.sky === 'dusk'}}">
+    <view wx:for="{{stars}}" wx:key="id" class="star" style="left:{{item.left}}%;top:{{item.top}}%;animation-delay:{{item.delay}}s;"></view>
   </view>
-  <view wx:if="{{sky === 'rain' || sky === 'storm'}}" class="rain-layer {{windy ? 'windy' : ''}}"></view>
-  <view wx:if="{{sky === 'snow'}}" class="snow-layer"></view>
-  <view wx:if="{{sky === 'fog'}}" class="fog-layer">  </view>
-  <view wx:if="{{sky === 'storm'}}" class="flash-layer"></view>
+  <view class="hill far"></view>
+  <view class="hill near"></view>
+  <view class="land"></view>
+  <view class="tree" wx:if="{{scene.scene === 'meadow' || scene.shelter === 'tree'}}"></view>
+  <view class="stream" wx:if="{{scene.scene === 'stream'}}"><view class="glint"></view></view>
+  <view class="mist" wx:if="{{scene.scene === 'stream'}}"></view>
+  <view class="tent" wx:if="{{scene.scene === 'camp' || scene.scene === 'valley' || scene.shelter === 'canopy'}}"></view>
+  <view class="shelter shelter-{{scene.shelter}}" wx:if="{{scene.shelter}}"></view>
+  <view class="tint tint-{{scene.tint}}" style="opacity:{{scene.tintOpacity}};"></view>
+  <view class="campfire fire-{{scene.campfire}}" wx:if="{{scene.campfire !== 'none'}}">
+    <view class="glow"></view>
+    <view class="flame a"></view>
+    <view class="flame b"></view>
+    <view class="spark" wx:for="{{sparks}}" wx:key="id" style="left:{{item.left}}rpx;animation-delay:{{item.delay}}s;"></view>
+  </view>
+  <view class="falls" wx:if="{{scene.particles === 'rain' || scene.particles === 'snow'}}">
+    <view wx:for="{{drops}}" wx:key="id" class="bit {{scene.particles}}" style="left:{{item.left}}%;animation-delay:{{item.delay}}s;animation-duration:{{item.duration}}s;"></view>
+  </view>
 
-  <view wx:if="{{splashShow}}" class="splash {{splashOn ? 'on' : ''}} {{splashLeave ? 'leave' : ''}}" bindtap="skipSplash">
+  <view class="wordmark" style="top:{{statusBar + 8}}px;">山谷回声</view>
+  <view class="sound-btn" style="top:{{statusBar + 6}}px;" catchtap="openSettings">{{soundOn ? '声' : '静'}}</view>
+
+  <view class="otter pose-{{pose}} outfit-{{scene.outfit}}" catchtap="wakeOtter">
+    <view class="think" wx:if="{{pose === 'think'}}">……</view>
+    <view class="ear left"></view>
+    <view class="ear right"></view>
+    <image class="body" src="/images/tuantuan/tuantuan-default.jpg" mode="aspectFill"></image>
+    <view class="tail"></view>
+    <view class="prop scarf" wx:if="{{scene.layers.scarf}}"></view>
+    <view class="prop cocoa" wx:if="{{scene.layers.cocoa}}"></view>
+    <view class="prop straw" wx:if="{{scene.layers.strawHat}}"></view>
+    <view class="prop wizard" wx:if="{{scene.layers.wizardHat}}"></view>
+    <view class="prop cloak" wx:if="{{scene.layers.cloak || scene.layers.rainCloak}}"></view>
+    <view class="prop nightcap" wx:if="{{scene.layers.nightcap}}"></view>
+    <view class="prop knit" wx:if="{{scene.layers.knitHat}}"></view>
+    <view class="prop umbrella" wx:if="{{scene.layers.umbrella}}"></view>
+    <view class="prop lantern" wx:if="{{scene.layers.lantern}}"></view>
+    <view class="prop blanket" wx:if="{{scene.layers.blanket}}"></view>
+    <view class="prop notebook {{scene.layers.notesOpen ? 'open' : ''}}" wx:if="{{scene.layers.notebook}}"></view>
+    <view class="prop quill" wx:if="{{scene.layers.quill}}"></view>
+  </view>
+
+  <scroll-view class="replies" scroll-y scroll-into-view="{{anchor}}" scroll-with-animation>
+    <view wx:for="{{messages}}" wx:key="id" id="m-{{item.id}}" class="reply">
+      <view class="bubble ai {{item.typing ? 'typing' : ''}}">
+        <block wx:if="{{item.typing}}"><view class="dot"></view><view class="dot d2"></view><view class="dot d3"></view></block>
+        <block wx:else>{{item.text}}</block>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="ghost {{ghost.phase}}" wx:if="{{ghost}}">
+    <view class="wave" wx:if="{{ghost.wave}}">
+      <view class="bar"></view><view class="bar"></view><view class="bar"></view><view class="bar"></view><view class="bar"></view>
+    </view>
+    <view class="bubble user" wx:else>{{ghost.text}}</view>
+    <view class="mote" wx:for="{{motes}}" wx:key="id" style="left:{{item.left}}%;animation-delay:{{item.delay}}s;"></view>
+  </view>
+
+  <view class="composer" catchtap="noop">
+    <view class="rec" wx:if="{{recording}}">
+      <text class="rec-time">{{recordSec}}″</text>
+      <view class="rec-cancel" catchtap="cancelRecord">取消</view>
+      <view class="rec-stop" catchtap="stopRecord">说完了</view>
+    </view>
+    <block wx:else>
+      <view class="mic" catchtap="startRecord">声</view>
+      <input class="input" value="{{draft}}" maxlength="500" confirm-type="send" placeholder="对着山谷说一句" bindinput="onInput" bindfocus="onFocus" bindblur="onBlur" bindconfirm="onSend" />
+      <view class="send {{sending ? 'off' : ''}}" catchtap="onSend">↑</view>
+    </block>
+  </view>
+
+  <view class="settings" wx:if="{{settingsOpen}}" catchtap="closeSettings">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-title">声音</view>
+      <view class="row-set">
+        <text>山谷环境音</text>
+        <switch checked="{{soundOn}}" color="#E8A87C" bindchange="onSoundChange" />
+      </view>
+      <view class="sheet-note">鸟鸣、溪流、雨雪和篝火。没有音频文件时会保持安静。</view>
+    </view>
+  </view>
+
+  <view wx:if="{{splashShow}}" class="splash {{splashOn ? 'on' : ''}} {{splashLeave ? 'leave' : ''}}" catchtap="skipSplash">
     <image class="splash-art" src="{{splashSrc}}" mode="aspectFill" binderror="skipSplash"></image>
     <view class="splash-fx fx-{{splashKind}}"></view>
-  </view>
-
-  <view class="hero">
-    <view class="pills">
-      <view wx:if="{{weatherIcon}}" class="weather-pill w-{{weatherKind}}">{{weatherIcon}}</view>
-      <view class="time-pill">{{hourLabel}}</view>
-    </view>
-  </view>
-
-  <view class="shelter">
-    <scroll-view class="list" scroll-y scroll-into-view="{{anchor}}" scroll-with-animation>
-      <view wx:for="{{messages}}" wx:key="id" id="m-{{item.id}}" class="row {{item.role}} {{item.switch ? 'switch' : ''}}">
-        <image wx:if="{{item.role === 'ai'}}" class="tuantuan" src="/images/tuantuan/tuantuan-default.jpg" mode="aspectFill"></image>
-        <view class="bubble {{item.typing ? 'typing' : ''}}">
-          <block wx:if="{{item.typing}}">
-            <view class="dot"></view>
-            <view class="dot d2"></view>
-            <view class="dot d3"></view>
-          </block>
-          <block wx:else>{{item.text}}</block>
-        </view>
-      </view>
-    </scroll-view>
-
-    <view class="composer">
-      <textarea
-        class="input"
-        value="{{draft}}"
-        maxlength="500"
-        auto-height
-        confirm-type="send"
-        bindinput="onInput"
-        bindconfirm="onSend"
-        placeholder="嗯，我在听"
-      />
-      <view class="send {{sending ? 'off' : ''}}" bindtap="onSend">↑</view>
-    </view>
   </view>
 </view>

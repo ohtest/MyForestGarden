@@ -1,72 +1,82 @@
 const app = getApp();
 const OPENING = "我在这里。你想说什么都可以";
-const HOUR_NAMES = { dawn: "清晨了", noon: "午后了", dusk: "傍晚了", night: "夜里了" };
-const PLATE_OF = { clear: "clear", partly: "clear", cloudy: "cloudy", fog: "cloudy", rain: "rain", storm: "rain", snow: "snow" };
-const SKY_GLYPH = { clear: "☀\uFE0E", partly: "☁\uFE0E", cloudy: "☁\uFE0E", fog: "≋", rain: "☂\uFE0E", storm: "ϟ", snow: "❄\uFE0E" };
+const { lookup } = require("../../utils/valleyScene");
+const sound = require("../../utils/valleySound");
 
-function weatherGlyph(sky, hour) {
-  if (hour === "night" && (sky === "clear" || sky === "partly")) return "☾";
-  return SKY_GLYPH[sky] || SKY_GLYPH.clear;
+function spots(count, kind) {
+  const list = [];
+  const n = Math.min(count, 24);
+  for (let i = 0; i < n; i += 1) {
+    list.push({
+      id: i,
+      left: Math.round(Math.random() * 100),
+      top: Math.round(Math.random() * 46),
+      delay: (Math.random() * 3).toFixed(2),
+      duration: (kind === "snow" ? 5 + Math.random() * 3 : 0.8 + Math.random() * 0.5).toFixed(2),
+    });
+  }
+  return list;
 }
 
-function sceneKind(sky, windy, temperature, hour) {
-  if (sky === "storm" || (hour === "night" && sky === "rain")) return "storm";
-  if (sky === "snow") return "snow";
-  if (sky === "rain") return "rain";
-  if (sky === "fog") return "fog";
-  if (windy) return "wind";
-  if (sky === "cloudy") return "cloudy";
-  if (typeof temperature === "number" && temperature >= 32 && hour === "noon") return "heat";
-  return "sunny";
-}
-
-function weatherKind(sky, hour) {
-  if (hour === "night" && (sky === "clear" || sky === "partly")) return "moon";
-  return SKY_GLYPH[sky] ? sky : "clear";
-}
-
-function hourScene() {
-  const h = new Date().getHours();
-  if (h >= 5 && h < 10) return "dawn";
-  if (h >= 10 && h < 17) return "noon";
-  if (h >= 17 && h < 19) return "dusk";
-  return "night";
+function lowPowerDevice() {
+  try {
+    const info = wx.getSystemInfoSync();
+    return info.benchmarkLevel > 0 && info.benchmarkLevel < 15;
+  } catch (e) {
+    return false;
+  }
 }
 
 Page({
   data: {
+    statusBar: 20,
+    scene: lookup(new Date().getHours(), "clear"),
+    pose: "listen",
+    lowPower: false,
+    fireBoost: false,
     messages: [],
     draft: "",
     sending: false,
-    modelOk: false,
-    scene: "autumn",
-    sky: "clear",
-    windy: false,
-    plates: ["", ""],
-    front: 0,
-    hour: "dusk",
-    hourLabel: "傍晚了",
-    weatherIcon: "",
-    weatherKind: "clear",
-    temperature: null,
+    focused: false,
+    recording: false,
+    recordSec: 0,
+    ghost: null,
+    motes: spots(8, "snow"),
+    drops: [],
+    sparks: spots(6, "snow"),
+    stars: spots(12, "snow"),
+    soundOn: true,
+    settingsOpen: false,
     splashShow: false,
     splashOn: false,
     splashLeave: false,
     splashSrc: "",
     splashKind: "sunny",
     nextId: 1,
-    lastRole: "",
     anchor: "",
   },
 
   onLoad() {
-    this.refreshHealth();
-    this.applyHour();
+    const info = wx.getSystemInfoSync();
+    const soundOn = wx.getStorageSync("vv_sound") !== "0";
+    this.setData({
+      statusBar: info.statusBarHeight || 20,
+      lowPower: lowPowerDevice(),
+      soundOn,
+    });
+    this.comfortStreak = 0;
+    this.replyQueue = null;
+    this.recordCancelled = false;
+    this.recorder = wx.getRecorderManager();
+    this.recorder.onStop((res) => this.finishRecord(res));
+    this.recorder.onError(() => this.setData({ recording: false }));
+    this.applyScene();
     this.loadWeather();
-    this.hourTimer = setInterval(() => this.applyHour(), 60000);
+    this.hourTimer = setInterval(() => this.applyScene(), 60000);
     this.splashStarted = false;
     this.splashDone = false;
     this.splashWait = setTimeout(() => this.beginSplash(), 900);
+    this.scheduleNod();
   },
 
   onShow() {
@@ -74,65 +84,34 @@ Page({
   },
 
   onUnload() {
-    if (this.hourTimer) clearInterval(this.hourTimer);
-    if (this.typeTimer) clearInterval(this.typeTimer);
-    if (this.splashWait) clearTimeout(this.splashWait);
-    if (this.splashHide) clearTimeout(this.splashHide);
+    [this.hourTimer, this.nodTimer, this.typeTimer, this.splashWait, this.splashHide, this.ghostTimer, this.recordTimer, this.poseTimer].forEach((id) => {
+      if (id) clearTimeout(id);
+      if (id) clearInterval(id);
+    });
+    sound.stop();
   },
 
-  consumePendingChat() {
-    const pending = app.globalData.pendingChat;
-    if (!pending) return;
-    app.globalData.pendingChat = null;
-    if (pending.source === "answer-book" && pending.answer) {
-      const line = `你翻到：「${pending.answer}」\n\n想从这里说说吗？我在。`;
-      this.speak(line, 200);
+  noop() {},
+
+  onStageTap() {
+    sound.arm();
+    this.syncSound();
+  },
+
+  applyScene() {
+    const scene = lookup(new Date().getHours(), this.sky || "clear");
+    const pose = scene.period === "noon" && !this.data.focused && !this.data.sending ? "nap" : this.data.pose;
+    const drops = this.data.lowPower ? [] : spots(scene.particles === "snow" ? 16 : 22, scene.particles);
+    this.setData({ scene, drops, pose: this.data.pose === "think" ? "think" : pose });
+    this.syncSound();
+  },
+
+  syncSound() {
+    if (!this.data.soundOn) {
+      sound.stop();
+      return;
     }
-  },
-
-  applyHour() {
-    const hour = hourScene();
-    const { weatherIcon, sky } = this.data;
-    this.setData({
-      hour,
-      hourLabel: HOUR_NAMES[hour],
-      weatherIcon: weatherIcon ? weatherGlyph(sky, hour) : "",
-      weatherKind: weatherKind(sky, hour),
-    });
-    this.setPlate();
-  },
-
-  setPlate() {
-    const { hour, sky, plates, front } = this.data;
-    const src = `${app.globalData.apiBase}/art/weather/${hour}-${PLATE_OF[sky] || "clear"}.jpg?v=tuantuan`;
-    if (plates[front] === src) return;
-    const next = 1 - front;
-    const updated = plates.slice();
-    updated[next] = src;
-    this.setData({ plates: updated, front: next });
-  },
-
-  onPlateError(e) {
-    const index = Number(e.currentTarget.dataset.index);
-    const updated = this.data.plates.slice();
-    updated[index] = `/images/sky-${this.data.hour}.png`;
-    this.setData({ plates: updated });
-  },
-
-  onInput(e) {
-    this.setData({ draft: e.detail.value });
-  },
-
-  refreshHealth() {
-    wx.request({
-      url: `${app.globalData.apiBase}/api/health`,
-      success: (res) => {
-        const data = res.data || {};
-        const status = data[data.provider];
-        this.setData({ modelOk: !!(status && status.ok) });
-      },
-      fail: () => this.setData({ modelOk: false }),
-    });
+    sound.play(this.data.scene.track, true);
   },
 
   loadWeather() {
@@ -142,19 +121,11 @@ Page({
         url: `${app.globalData.apiBase}/api/weather${q}`,
         success: (res) => {
           const data = res.data || {};
-          const legacy = { rain: "rain", snow: "snow" }[data.scene] || "clear";
-          const sky = PLATE_OF[data.sky] ? data.sky : legacy;
-          this.setData({
-            scene: data.scene || "autumn",
-            sky,
-            windy: !!data.windy,
-            temperature: typeof data.temperature === "number" ? data.temperature : null,
-            weatherIcon: weatherGlyph(sky, this.data.hour),
-            weatherKind: weatherKind(sky, this.data.hour),
-          });
-          this.setPlate();
+          this.sky = data.sky || "clear";
+          this.applyScene();
           this.beginSplash();
         },
+        fail: () => this.beginSplash(),
       });
     };
     wx.getLocation({
@@ -165,24 +136,18 @@ Page({
   },
 
   splashFile() {
-    const { sky, windy, temperature, hour } = this.data;
-    const kind = sceneKind(sky, windy, temperature, hour);
-    const file = {
-      storm: "splash-06-storm.jpg",
-      snow: "splash-03-snow.jpg",
-      rain: "splash-02-rain.jpg",
-      fog: "splash-07-fog.jpg",
-      wind: "splash-04-wind.jpg",
-      cloudy: "splash-05-cloudy.jpg",
-      heat: "splash-08-heat.jpg",
-      sunny: "splash-01-sunny.jpg",
-    }[kind];
-    return [kind, file];
+    const scene = this.data.scene;
+    if (scene.weather === "snow") return ["snow", "splash-03-snow.jpg"];
+    if (scene.weather === "rain" && (scene.period === "night" || scene.period === "late")) return ["storm", "splash-06-storm.jpg"];
+    if (scene.weather === "rain") return ["rain", "splash-02-rain.jpg"];
+    if (scene.weather === "cloudy") return ["cloudy", "splash-05-cloudy.jpg"];
+    return ["sunny", "splash-01-sunny.jpg"];
   },
 
   beginSplash() {
     if (this.splashStarted) return;
     if (!app.globalData.splashPending) {
+      this.splashStarted = true;
       if (!this.data.messages.length && !this.splashDone) {
         this.splashDone = true;
         this.speak(OPENING, 200);
@@ -191,12 +156,12 @@ Page({
     }
     this.splashStarted = true;
     if (this.splashWait) clearTimeout(this.splashWait);
-    const [kind, file] = this.splashFile();
+    const pair = this.splashFile();
     this.setData({
       splashShow: true,
       splashOn: true,
-      splashKind: kind,
-      splashSrc: `/images/tuantuan/splash/${file}`,
+      splashKind: pair[0],
+      splashSrc: `/images/tuantuan/splash/${pair[1]}`,
     });
     if (wx.vibrateShort) wx.vibrateShort({ type: "light" });
     this.splashHide = setTimeout(() => this.finishSplash(), 4200);
@@ -218,13 +183,150 @@ Page({
     }, 460);
   },
 
+  consumePendingChat() {
+    const pending = app.globalData.pendingChat;
+    if (!pending) return;
+    app.globalData.pendingChat = null;
+    if (pending.source === "answer-book" && pending.answer) {
+      this.speak(`你翻到：「${pending.answer}」\n\n想从这里说说吗？我在。`, 200);
+    }
+  },
+
+  scheduleNod() {
+    const wait = 5000 + Math.round(Math.random() * 3000);
+    this.nodTimer = setTimeout(() => {
+      const idle = !this.data.sending && !this.data.focused && !this.data.recording;
+      if (idle && (this.data.pose === "listen" || this.data.pose === "nap")) {
+        this.setData({ pose: "nod" });
+        this.poseTimer = setTimeout(() => {
+          if (this.data.pose === "nod") {
+            this.setData({ pose: this.data.scene.period === "noon" ? "nap" : "listen" });
+          }
+        }, 800);
+      }
+      this.scheduleNod();
+    }, wait);
+  },
+
+  wakeOtter() {
+    if (this.data.scene.period !== "noon") return;
+    this.setData({ pose: "wake" });
+    this.poseTimer = setTimeout(() => this.setData({ pose: "listen" }), 900);
+  },
+
+  onFocus() {
+    this.setData({ pose: "lean", focused: true });
+  },
+
+  onBlur() {
+    this.setData({ focused: false });
+    if (!this.data.sending) this.setData({ pose: "listen" });
+  },
+
+  onInput(e) {
+    this.setData({ draft: e.detail.value, pose: "lean" });
+  },
+
+  openSettings() {
+    this.setData({ settingsOpen: true });
+  },
+
+  closeSettings() {
+    this.setData({ settingsOpen: false });
+  },
+
+  onSoundChange(e) {
+    const soundOn = !!e.detail.value;
+    wx.setStorageSync("vv_sound", soundOn ? "1" : "0");
+    this.setData({ soundOn });
+    sound.arm();
+    this.syncSound();
+  },
+
   onSend() {
     const message = (this.data.draft || "").trim();
-    if (!message || this.data.sending) return;
-    this.push("user", message);
-    const waitId = this.push("ai", "", true);
-    this.setData({ draft: "", sending: true });
+    if (!message || this.data.sending || this.data.ghost) return;
+    sound.arm();
+    this.syncSound();
+    this.setData({ draft: "" });
+    this.releaseWords(message, false, false);
+  },
 
+  startRecord() {
+    if (this.data.sending || this.data.ghost) return;
+    sound.arm();
+    this.recordCancelled = false;
+    this.setData({ recording: true, recordSec: 0, pose: "lean" });
+    this.recordTimer = setInterval(() => {
+      const next = this.data.recordSec + 1;
+      this.setData({ recordSec: next });
+      if (next >= 60) this.stopRecord();
+    }, 1000);
+    this.recorder.start({ duration: 60000, format: "mp3" });
+  },
+
+  stopRecord() {
+    if (this.recordTimer) clearInterval(this.recordTimer);
+    this.recorder.stop();
+  },
+
+  cancelRecord() {
+    this.recordCancelled = true;
+    if (this.recordTimer) clearInterval(this.recordTimer);
+    this.setData({ recording: false, pose: "listen" });
+    this.recorder.stop();
+  },
+
+  finishRecord(res) {
+    if (this.recordTimer) clearInterval(this.recordTimer);
+    this.setData({ recording: false });
+    if (this.recordCancelled) return;
+    const longVoice = (res.duration || 0) > 30000;
+    this.setData({ ghost: { phase: "show", text: "", wave: true } });
+    this.transcribe(res.tempFilePath).then((text) => {
+      const heard = (text || "").trim();
+      if (!heard) {
+        this.setData({ ghost: null, pose: "listen" });
+        this.speak("风有点大，我没听清。你打字告诉我也一样。", 200);
+        return;
+      }
+      this.setData({ ghost: { phase: "show", text: heard, wave: false } });
+      this.releaseWords(heard, true, longVoice);
+    }).catch(() => {
+      this.setData({ ghost: null, pose: "listen" });
+      this.speak("风有点大，我没听清。你打字告诉我也一样。", 200);
+    });
+  },
+
+  transcribe(filePath) {
+    return new Promise((resolve, reject) => {
+      let plugin = null;
+      try {
+        plugin = requirePlugin("WechatSI");
+      } catch (e) {
+        plugin = null;
+      }
+      if (!plugin || !plugin.translateVoice) {
+        reject(new Error("no-asr"));
+        return;
+      }
+      plugin.translateVoice({
+        lfrom: "zh_CN",
+        lto: "zh_CN",
+        filePath,
+        success: (res) => resolve(res.result || ""),
+        fail: reject,
+      });
+    });
+  },
+
+  releaseWords(message, alreadyShown, longVoice) {
+    if (!alreadyShown) this.setData({ ghost: { phase: "show", text: message, wave: false } });
+    this.setData({ sending: true, pose: "lean" });
+    const started = Date.now();
+    this.ghostTimer = setTimeout(() => {
+      this.setData({ pose: longVoice ? "hold" : "think", ghost: Object.assign({}, this.data.ghost, { phase: "scatter" }) });
+    }, 2500);
     wx.request({
       url: `${app.globalData.apiBase}/api/chat`,
       method: "POST",
@@ -233,57 +335,73 @@ Page({
       data: {
         session_id: app.globalData.sessionId,
         message,
+        long_voice: !!longVoice,
+        period: this.data.scene.period,
       },
       success: (res) => {
         if (res.statusCode >= 400) {
-          const detail = (res.data && res.data.detail) || "请求失败";
-          this.typeInto(waitId, detail);
+          this.replyQueue = { text: (res.data && res.data.detail) || "请求失败", presence: "listen" };
           return;
         }
         app.globalData.sessionId = res.data.session_id;
-        this.typeInto(waitId, res.data.reply);
+        let presence = res.data.presence || "listening";
+        if (presence === "comfort") this.comfortStreak += 1;
+        else if (presence !== "warmth") this.comfortStreak = 0;
+        if (this.comfortStreak >= 2) presence = "warmth";
+        this.replyQueue = { text: res.data.reply, presence };
       },
-      fail: () => this.typeInto(waitId, "暂时连不上。"),
-      complete: () => this.setData({ sending: false }),
+      fail: () => {
+        this.replyQueue = { text: "暂时连不上。", presence: "listening" };
+      },
+      complete: () => {
+        const wait = Math.max(0, 4500 - (Date.now() - started));
+        setTimeout(() => this.showReply(), wait);
+      },
     });
+  },
+
+  showReply() {
+    const queued = this.replyQueue || { text: "我在。", presence: "listening" };
+    this.replyQueue = null;
+    this.setData({ ghost: null, sending: false });
+    this.applyPresence(queued.presence);
+    this.speak(queued.text, queued.presence === "hold" ? 500 : 200);
+  },
+
+  applyPresence(presence) {
+    const pose = presence === "listening" ? "listen" : presence;
+    this.setData({ pose, fireBoost: presence === "warmth" });
+    if (this.poseTimer) clearTimeout(this.poseTimer);
+    const back = presence === "comfort" ? 2600 : 1800;
+    this.poseTimer = setTimeout(() => {
+      if (!this.data.sending && !this.data.focused) {
+        this.setData({
+          pose: this.data.scene.period === "noon" ? "nap" : "listen",
+          fireBoost: false,
+        });
+      }
+    }, back);
   },
 
   speak(full, delay) {
-    const id = this.push("ai", "", true);
-    setTimeout(() => this.typeInto(id, full), delay || 0);
-  },
-
-  push(role, text, typing) {
     const id = this.data.nextId;
-    const switched = this.data.lastRole && this.data.lastRole !== role;
     this.setData({
-      messages: this.data.messages.concat({
-        id,
-        role,
-        text: text || "",
-        typing: !!typing,
-        switch: switched,
-      }),
+      messages: this.data.messages.concat({ id, text: "", typing: true }),
       nextId: id + 1,
-      lastRole: role,
       anchor: `m-${id}`,
     });
-    return id;
+    setTimeout(() => this.typeInto(id, full), delay || 0);
   },
 
   typeInto(id, full) {
     if (this.typeTimer) clearInterval(this.typeTimer);
     let i = 0;
-    const messages = this.data.messages.map((item) =>
-      item.id === id ? { ...item, typing: false, text: "" } : item
-    );
-    this.setData({ messages });
     this.typeTimer = setInterval(() => {
       i += 1;
-      const next = this.data.messages.map((item) =>
-        item.id === id ? { ...item, text: full.slice(0, i) } : item
-      );
-      this.setData({ messages: next, anchor: `m-${id}` });
+      const messages = this.data.messages.map((item) => (
+        item.id === id ? Object.assign({}, item, { typing: false, text: full.slice(0, i) }) : item
+      ));
+      this.setData({ messages, anchor: `m-${id}` });
       if (i >= full.length) {
         clearInterval(this.typeTimer);
         this.typeTimer = null;
