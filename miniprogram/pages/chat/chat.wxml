@@ -1,0 +1,58 @@
+<view class="page {{hour}} {{sky}}">
+  <view class="world">
+    <block wx:for="{{plates}}" wx:key="index">
+      <image
+        wx:if="{{item}}"
+        class="plate {{front === index ? 'on' : ''}}"
+        src="{{item}}"
+        data-index="{{index}}"
+        binderror="onPlateError"
+        mode="aspectFill"
+      ></image>
+    </block>
+    <view wx:if="{{sky === 'partly' || sky === 'cloudy'}}" class="clouds"></view>
+    <view wx:if="{{sky === 'clear' && hour !== 'night'}}" class="sunbeam"></view>
+    <view wx:if="{{(hour === 'dusk' || hour === 'night')}}" class="lamp-glow"></view>
+  </view>
+  <view wx:if="{{sky === 'rain' || sky === 'storm'}}" class="rain-layer {{windy ? 'windy' : ''}}"></view>
+  <view wx:if="{{sky === 'snow'}}" class="snow-layer"></view>
+  <view wx:if="{{sky === 'fog'}}" class="fog-layer"></view>
+  <view wx:if="{{sky === 'storm'}}" class="flash-layer"></view>
+
+  <view class="shelter">
+    <view class="hero">
+      <view class="pills">
+        <view wx:if="{{weatherIcon}}" class="weather-pill w-{{weatherKind}}">{{weatherIcon}}</view>
+        <view class="time-pill">{{hourLabel}}</view>
+      </view>
+    </view>
+
+    <scroll-view class="list" scroll-y scroll-into-view="{{anchor}}" scroll-with-animation>
+      <view wx:for="{{messages}}" wx:key="id" id="m-{{item.id}}" class="row {{item.role}} {{item.switch ? 'switch' : ''}}">
+        <image wx:if="{{item.role === 'ai'}}" class="xiaoman" src="/images/xiaoman/xiaoman-default.png" mode="aspectFill"></image>
+        <view class="bubble {{item.typing ? 'typing' : ''}}">
+          <block wx:if="{{item.typing}}">
+            <view class="dot"></view>
+            <view class="dot d2"></view>
+            <view class="dot d3"></view>
+          </block>
+          <block wx:else>{{item.text}}</block>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="composer">
+      <textarea
+        class="input"
+        value="{{draft}}"
+        maxlength="500"
+        auto-height
+        confirm-type="send"
+        bindinput="onInput"
+        bindconfirm="onSend"
+        placeholder="嗯，我在听"
+      />
+      <view class="send {{sending ? 'off' : ''}}" bindtap="onSend">↑</view>
+    </view>
+  </view>
+</view>

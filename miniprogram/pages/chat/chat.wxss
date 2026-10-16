@@ -1,0 +1,268 @@
+.page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  font-family: "Yuanti SC", "STYuanti", "PingFang SC", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #5C5348;
+}
+
+.page.night { color: #F5EDE0; }
+
+.world {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.plate {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 2.4s ease;
+}
+.plate.on { opacity: 1; }
+
+.sunbeam {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(118deg, transparent 30%, rgba(255, 236, 200, 0.22) 42%, transparent 52%, rgba(255, 236, 200, 0.14) 60%, transparent 70%);
+  mix-blend-mode: screen;
+  animation: breathe 8s ease-in-out infinite;
+}
+.page.dusk .sunbeam {
+  background: linear-gradient(110deg, transparent 32%, rgba(255, 176, 104, 0.2) 44%, transparent 56%);
+}
+.lamp-glow {
+  position: absolute;
+  right: -20%;
+  top: 22%;
+  width: 90%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(255, 176, 96, 0.16), transparent 62%);
+  mix-blend-mode: screen;
+  animation: breathe 4.6s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+.fog-layer {
+  position: absolute;
+  inset: -20% -40%;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 30% 40%, rgba(236, 238, 242, 0.4), transparent 50%),
+    radial-gradient(ellipse at 70% 65%, rgba(236, 238, 242, 0.32), transparent 48%);
+  animation: fogmove 40s ease-in-out infinite alternate;
+}
+@keyframes fogmove { to { transform: translateX(18%); } }
+.flash-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: rgba(240, 244, 255, 0.5);
+  opacity: 0;
+  animation: flash 11s linear infinite;
+}
+@keyframes flash {
+  0%, 90%, 100% { opacity: 0; }
+  90.6% { opacity: 0.8; }
+  91.4% { opacity: 0.1; }
+  92.4% { opacity: 0.55; }
+  95% { opacity: 0; }
+}
+
+.clouds {
+  position: absolute;
+  inset: -10%;
+  background:
+    radial-gradient(ellipse at 20% 18%, rgba(253,246,236,0.28), transparent 42%),
+    radial-gradient(ellipse at 78% 12%, rgba(255,253,248,0.22), transparent 38%);
+  animation: drift 90s linear infinite;
+}
+@keyframes drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(8%); }
+}
+.rain-layer, .snow-layer {
+  position: absolute;
+  inset: -20%;
+  z-index: 1;
+  pointer-events: none;
+}
+.rain-layer {
+  background-image: repeating-linear-gradient(
+    110deg,
+    transparent 0 18px,
+    rgba(255,253,248,0.22) 19px,
+    transparent 21px
+  );
+  animation: rainmove 0.7s linear infinite;
+}
+.snow-layer {
+  background-image: radial-gradient(#FFFDF8 1px, transparent 1.5px);
+  background-size: 28px 28px;
+  animation: snowmove 10s linear infinite;
+  opacity: 0.65;
+}
+.rain-layer.windy {
+  background-image: repeating-linear-gradient(
+    120deg,
+    transparent 0 16px,
+    rgba(255,253,248,0.24) 17px,
+    transparent 19px
+  );
+  animation-duration: 0.5s;
+}
+@keyframes rainmove { to { transform: translate(18px, 40px); } }
+@keyframes snowmove { to { transform: translate(20px, 80px); } }
+
+.shelter {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  margin: 48px 14px 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #FDF6EC;
+  border-radius: 32px;
+  transition: background 2.4s ease;
+}
+.page.dawn .shelter { background: #FBF0EB; }
+.page.dusk .shelter { background: #FAE9DA; }
+.page.night .shelter { background: #2C2822; }
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 16px 8px;
+  padding-top: calc(12px + env(safe-area-inset-top));
+  background: transparent;
+}
+.time-pill {
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: #B7A99A;
+  background: rgba(232, 168, 124, 0.35);
+}
+.page.dawn .time-pill { background: rgba(232, 215, 196, 0.55); }
+.page.noon .time-pill { background: rgba(242, 196, 160, 0.4); }
+.page.night .time-pill { background: rgba(138, 154, 123, 0.28); color: #A89888; }
+.pills { display: flex; align-items: center; gap: 6px; }
+.weather-pill { font-size: 18px; line-height: 1; color: #B7A99A; }
+.page.night .weather-pill { color: #A89888; }
+.w-clear { animation: w-spin 14s linear infinite; }
+.w-partly, .w-cloudy { animation: w-drift 5s ease-in-out infinite; }
+.w-moon { animation: w-rock 6s ease-in-out infinite; }
+.w-rain, .w-snow { animation: w-bob 1.6s ease-in-out infinite; }
+.w-storm { animation: w-flash 3.2s ease-in-out infinite; }
+.w-fog { animation: w-drift 4s ease-in-out infinite; }
+@keyframes w-spin { to { transform: rotate(360deg); } }
+@keyframes w-drift { 0%, 100% { transform: translateX(-1.5px); } 50% { transform: translateX(1.5px); } }
+@keyframes w-rock { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
+@keyframes w-bob { 0%, 100% { transform: translateY(-1px); } 50% { transform: translateY(1.5px); } }
+@keyframes w-flash { 0%, 70%, 100% { opacity: 0.45; } 74% { opacity: 1; } 78% { opacity: 0.5; } 82% { opacity: 1; } }
+
+.list { flex: 1; padding: 4px 16px 12px; }
+.row { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; }
+.row.switch { margin-top: 24px; }
+.row.user { justify-content: flex-end; }
+
+.bubble {
+  max-width: 75%;
+  padding: 10px 14px;
+  font-size: 15px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+.ai .bubble {
+  background: #FFFDF8;
+  color: #5C5348;
+  border-radius: 16px 16px 16px 4px;
+}
+.user .bubble {
+  background: linear-gradient(135deg, #F2C4A0, #E8A87C);
+  color: #FFFDF8;
+  border-radius: 16px 16px 4px 16px;
+}
+.page.dawn .ai .bubble { background: #FFFBF8; }
+.page.dusk .ai .bubble { background: #FFF8F0; }
+.page.night .ai .bubble { background: #3A342C; color: #F5EDE0; }
+
+.bubble.typing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 52px;
+  min-height: 20px;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #8A9A7B;
+  opacity: 0.35;
+  animation: type-dot 1.8s ease-in-out infinite;
+}
+.d2 { animation-delay: 0.28s; }
+.d3 { animation-delay: 0.56s; }
+@keyframes type-dot {
+  0%, 100% { opacity: 0.28; }
+  50% { opacity: 0.9; }
+}
+
+.xiaoman {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #F2C4A0;
+}
+
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px calc(14px + env(safe-area-inset-bottom));
+  background: rgba(253, 246, 236, 0.94);
+  transition: background 2.4s ease;
+}
+.page.dawn .composer { background: rgba(251, 240, 235, 0.94); }
+.page.dusk .composer { background: rgba(250, 233, 218, 0.94); }
+.page.night .composer { background: rgba(44, 40, 34, 0.94); }
+.input {
+  flex: 1;
+  min-height: 40px;
+  max-height: 110px;
+  padding: 10px 16px;
+  background: #F3E6D2;
+  border-radius: 999px;
+  font-size: 15px;
+  color: #5C5348;
+}
+.page.dawn .input { background: #F2E1D9; }
+.page.dusk .input { background: #F1D9C3; }
+.page.night .input { background: #35302A; color: #F5EDE0; }
+.send {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F2C4A0, #E8A87C);
+  color: #FFFDF8;
+  text-align: center;
+  line-height: 38px;
+  font-size: 15px;
+  transition: opacity 0.7s ease;
+}
+.send.off { opacity: 0.45; }
