@@ -106,6 +106,50 @@
     .phone::before { mix-blend-mode: multiply; background-color: var(--phone-shade, transparent); }
     .phone::after { mix-blend-mode: screen; background-color: var(--phone-glow, transparent); }
     .phone > * { position: relative; z-index: 1; }
+    .open-splash {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      overflow: hidden;
+      background: #F7F1E6;
+      cursor: pointer;
+    }
+    .open-splash.leave {
+      opacity: 0;
+      transition: opacity 0.45s ease;
+      pointer-events: none;
+    }
+    .open-art {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 40%;
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+    }
+    .open-splash.play .open-art {
+      animation: splash-in 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+        splash-breathe 2.4s ease-in-out 1.8s infinite;
+    }
+    .open-fx {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    @keyframes splash-in {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes splash-breathe {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-2px) scale(1.012); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .open-art { animation: none; opacity: 1; transform: none; }
+    }
     .ai .bubble, footer, textarea { transition: background 2.4s ease, color 2.4s ease; }
     header {
       display: flex;
@@ -226,7 +270,7 @@
       50% { opacity: 0.9; }
     }
 
-    .xiaoman {
+    .tuantuan {
       width: 40px;
       height: 40px;
       flex-shrink: 0;
@@ -296,6 +340,10 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFDF8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         </button>
       </footer>
+      <div class="open-splash" id="openSplash" hidden>
+        <img class="open-art" id="openArt" alt="团团" />
+        <canvas class="open-fx" id="openFx"></canvas>
+      </div>
     </div>
   </div>
   <script>
@@ -344,11 +392,11 @@
       return "night";
     }
 
-    function xiaoman() {
+    function tuantuan() {
       const el = document.createElement("img");
-      el.className = "xiaoman";
-      el.src = "/art/xiaoman/xiaoman-default.png?v=glasses";
-      el.alt = "";
+      el.className = "tuantuan";
+      el.src = "/art/tuantuan/tuantuan-default.jpg?v=tuantuan";
+      el.alt = "团团";
       return el;
     }
 
@@ -360,7 +408,7 @@
       bubble.className = "bubble" + (opts && opts.wait ? " typing" : "");
       if (opts && opts.wait) bubble.innerHTML = "<i></i><i></i><i></i>";
       else bubble.textContent = (opts && opts.text) || "";
-      if (role === "ai") row.appendChild(xiaoman());
+      if (role === "ai") row.appendChild(tuantuan());
       row.appendChild(bubble);
       list.appendChild(row);
       list.scrollTop = list.scrollHeight;
@@ -389,7 +437,7 @@
 
     const PLATE_OF = { clear: "clear", partly: "clear", cloudy: "cloudy", fog: "cloudy", rain: "rain", storm: "rain", snow: "snow" };
     const NEXT_PHASE = { dawn: "noon", noon: "dusk", dusk: "night", night: "dawn" };
-    const weather = { sky: "clear", windy: false, intensity: 0 };
+    const weather = { sky: "clear", windy: false, intensity: 0, temperature: null };
 
     // Light grade per phase: [minute, shade rgba, glow rgba]. Night minutes run past 1440.
     const GRADE = {
@@ -458,7 +506,7 @@
     const preloaded = new Set();
 
     function plateSrc(phase) {
-      return "/art/weather/" + phase + "-" + PLATE_OF[weather.sky] + ".jpg";
+      return "/art/weather/" + phase + "-" + PLATE_OF[weather.sky] + ".jpg?v=tuantuan";
     }
 
     function preload(src) {
@@ -885,7 +933,9 @@
       weather.windy = !!data.windy || data.scene === "wind";
       const wet = ["rain", "storm", "snow"].includes(weather.sky);
       weather.intensity = Number(data.intensity) || (wet ? 0.5 : 0);
+      weather.temperature = typeof data.temperature === "number" ? data.temperature : weather.temperature;
       tick();
+      beginSplash();
       renderWeatherPill();
     }
 
@@ -987,6 +1037,141 @@
         chat();
       }
     });
+
+    const openSplash = document.getElementById("openSplash");
+    const openArt = document.getElementById("openArt");
+    const openFx = document.getElementById("openFx");
+    const splashCtx = openFx.getContext("2d");
+    const SPLASH_FILE = {
+      sunny: "splash-01-sunny.jpg",
+      rain: "splash-02-rain.jpg",
+      snow: "splash-03-snow.jpg",
+      wind: "splash-04-wind.jpg",
+      cloudy: "splash-05-cloudy.jpg",
+      storm: "splash-06-storm.jpg",
+      fog: "splash-07-fog.jpg",
+      heat: "splash-08-heat.jpg",
+    };
+    let splashStarted = false;
+    let splashLoop = 0;
+    let splashParts = [];
+
+    function splashKind() {
+      const hour = hourScene();
+      if (weather.sky === "storm" || (hour === "night" && weather.sky === "rain")) return "storm";
+      if (weather.sky === "snow") return "snow";
+      if (weather.sky === "rain") return "rain";
+      if (weather.sky === "fog") return "fog";
+      if (weather.windy) return "wind";
+      if (weather.sky === "cloudy") return "cloudy";
+      if (typeof weather.temperature === "number" && weather.temperature >= 32 && hour === "noon") return "heat";
+      return "sunny";
+    }
+
+    function seedSplashParts(kind, w, h) {
+      const n = kind === "fog" ? 8 : 36;
+      splashParts = Array.from({ length: n }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        s: 1 + Math.random() * 2.2,
+        v: 0.35 + Math.random() * 0.9,
+        drift: (Math.random() - 0.5) * 0.6,
+        a: 0.15 + Math.random() * 0.45,
+      }));
+    }
+
+    function drawSplashFx(kind) {
+      const w = openFx.width;
+      const h = openFx.height;
+      splashCtx.clearRect(0, 0, w, h);
+      for (const p of splashParts) {
+        if (kind === "rain" || kind === "storm") {
+          p.y += p.v * 4.2;
+          p.x += p.drift * 1.4;
+          splashCtx.strokeStyle = `rgba(186, 206, 220, ${0.35 + p.a * 0.4})`;
+          splashCtx.lineWidth = 1;
+          splashCtx.beginPath();
+          splashCtx.moveTo(p.x, p.y);
+          splashCtx.lineTo(p.x + p.drift * 6, p.y + 10);
+          splashCtx.stroke();
+        } else if (kind === "snow") {
+          p.y += p.v * 0.7;
+          p.x += Math.sin(p.y * 0.02) * 0.4;
+          splashCtx.fillStyle = `rgba(255, 255, 255, ${0.45 + p.a * 0.4})`;
+          splashCtx.beginPath();
+          splashCtx.arc(p.x, p.y, p.s, 0, Math.PI * 2);
+          splashCtx.fill();
+        } else if (kind === "wind") {
+          p.x += 1.6 + p.v;
+          p.y += Math.sin(p.x * 0.02) * 0.4;
+          splashCtx.fillStyle = `rgba(196, 154, 96, ${0.35 + p.a * 0.3})`;
+          splashCtx.beginPath();
+          splashCtx.ellipse(p.x, p.y, p.s * 2.2, p.s * 0.7, 0.5, 0, Math.PI * 2);
+          splashCtx.fill();
+        } else if (kind === "fog") {
+          p.x += 0.25;
+          splashCtx.fillStyle = `rgba(255, 255, 255, ${0.08 + p.a * 0.08})`;
+          splashCtx.beginPath();
+          splashCtx.ellipse(p.x, p.y, 80, 18, 0, 0, Math.PI * 2);
+          splashCtx.fill();
+        } else if (kind === "cloudy") {
+          p.y -= p.v * 0.45;
+          const life = (Math.sin(p.y * 0.04) + 1) / 2;
+          splashCtx.fillStyle = `rgba(255, 248, 236, ${life * 0.35})`;
+          splashCtx.beginPath();
+          splashCtx.ellipse(p.x, p.y, 10, 16, 0, 0, Math.PI * 2);
+          splashCtx.fill();
+        } else {
+          p.y -= p.v * 0.35;
+          p.x += p.drift * 0.3;
+          splashCtx.fillStyle = kind === "heat"
+            ? `rgba(255, 196, 120, ${0.25 + p.a * 0.35})`
+            : `rgba(255, 214, 140, ${0.2 + p.a * 0.45})`;
+          splashCtx.beginPath();
+          splashCtx.arc(p.x, p.y, p.s * 0.7, 0, Math.PI * 2);
+          splashCtx.fill();
+        }
+        if (p.y > h + 16) p.y = -12;
+        if (p.y < -20) p.y = h + 8;
+        if (p.x > w + 20) p.x = -16;
+        if (p.x < -20) p.x = w + 8;
+      }
+    }
+
+    function finishSplash() {
+      if (!splashStarted || openSplash.classList.contains("leave")) return;
+      openSplash.classList.add("leave");
+      cancelAnimationFrame(splashLoop);
+      setTimeout(() => {
+        openSplash.hidden = true;
+        speak(opening, 200);
+      }, 460);
+    }
+
+    function beginSplash() {
+      if (splashStarted) return;
+      splashStarted = true;
+      const kind = splashKind();
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      openArt.src = "/art/tuantuan/splash/" + SPLASH_FILE[kind] + "?v=splash";
+      openSplash.hidden = false;
+      openSplash.classList.add("play");
+      try { navigator.vibrate(12); } catch (e) { /* 网页里轻震不一定可用 */ }
+      const rect = openSplash.getBoundingClientRect();
+      openFx.width = Math.max(1, Math.round(rect.width));
+      openFx.height = Math.max(1, Math.round(rect.height));
+      seedSplashParts(kind, openFx.width, openFx.height);
+      if (!reduce) {
+        const tickFx = () => {
+          drawSplashFx(kind);
+          splashLoop = requestAnimationFrame(tickFx);
+        };
+        splashLoop = requestAnimationFrame(tickFx);
+      }
+      openSplash.addEventListener("click", finishSplash, { once: true });
+      setTimeout(finishSplash, reduce ? 700 : 4200);
+    }
+
     if (speed > 1) {
       plates.forEach((el) => { el.style.transitionDuration = "2.4s"; });
       shadeEl.style.transitionDuration = "0.4s";
@@ -1000,7 +1185,7 @@
     requestAnimationFrame(frame);
     loadWeather();
     setInterval(loadWeather, 30 * 60 * 1000);
-    speak(opening, 900);
+    setTimeout(beginSplash, 900);
   </script>
 </body>
 </html>

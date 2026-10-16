@@ -16,8 +16,13 @@
   </view>
   <view wx:if="{{sky === 'rain' || sky === 'storm'}}" class="rain-layer {{windy ? 'windy' : ''}}"></view>
   <view wx:if="{{sky === 'snow'}}" class="snow-layer"></view>
-  <view wx:if="{{sky === 'fog'}}" class="fog-layer"></view>
+  <view wx:if="{{sky === 'fog'}}" class="fog-layer">  </view>
   <view wx:if="{{sky === 'storm'}}" class="flash-layer"></view>
+
+  <view wx:if="{{splashShow}}" class="splash {{splashOn ? 'on' : ''}} {{splashLeave ? 'leave' : ''}}" bindtap="skipSplash">
+    <image class="splash-art" src="{{splashSrc}}" mode="aspectFill" binderror="skipSplash"></image>
+    <view class="splash-fx fx-{{splashKind}}"></view>
+  </view>
 
   <view class="shelter">
     <view class="hero">
@@ -29,7 +34,7 @@
 
     <scroll-view class="list" scroll-y scroll-into-view="{{anchor}}" scroll-with-animation>
       <view wx:for="{{messages}}" wx:key="id" id="m-{{item.id}}" class="row {{item.role}} {{item.switch ? 'switch' : ''}}">
-        <image wx:if="{{item.role === 'ai'}}" class="xiaoman" src="/images/xiaoman/xiaoman-default.png" mode="aspectFill"></image>
+        <image wx:if="{{item.role === 'ai'}}" class="tuantuan" src="/images/tuantuan/tuantuan-default.jpg" mode="aspectFill"></image>
         <view class="bubble {{item.typing ? 'typing' : ''}}">
           <block wx:if="{{item.typing}}">
             <view class="dot"></view>

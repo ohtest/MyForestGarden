@@ -1,0 +1,132 @@
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 48px 28px calc(40px + env(safe-area-inset-bottom));
+  background: #FDF6EC;
+  color: #5C5348;
+  font-family: "Yuanti SC", "STYuanti", "PingFang SC", sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.glow {
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  right: -60px;
+  top: -40px;
+  background: radial-gradient(circle, rgba(232, 168, 124, 0.28), transparent 70%);
+  pointer-events: none;
+}
+
+.intro,
+.stage {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: #B7A99A;
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: 36px;
+  line-height: 1.2;
+  color: #4A453C;
+  margin-bottom: 20px;
+}
+
+.hint {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #8A8074;
+  white-space: pre-wrap;
+  margin-bottom: 40px;
+}
+
+.open-btn,
+.btn {
+  height: 48px;
+  line-height: 48px;
+  text-align: center;
+  border-radius: 999px;
+  font-size: 16px;
+}
+
+.open-btn,
+.btn.primary {
+  background: linear-gradient(135deg, #F2C4A0, #E8A87C);
+  color: #FFFDF8;
+}
+
+.btn.ghost {
+  background: rgba(232, 168, 124, 0.18);
+  color: #8A8074;
+}
+
+.open-btn.busy,
+.btn.busy {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.book {
+  background: #FFFDF8;
+  border-radius: 24px;
+  padding: 36px 28px 32px;
+  box-shadow: 0 18px 40px rgba(92, 83, 72, 0.08);
+  margin-bottom: 28px;
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+}
+
+.book.flip {
+  animation: pageflip 0.55s ease;
+}
+
+@keyframes pageflip {
+  0% { transform: rotateY(0deg); opacity: 1; }
+  45% { transform: rotateY(12deg) scale(0.98); opacity: 0.35; }
+  100% { transform: rotateY(0deg); opacity: 1; }
+}
+
+.page-face {
+  width: 100%;
+}
+
+.quote-mark {
+  font-size: 48px;
+  line-height: 1;
+  color: #F2C4A0;
+  margin-bottom: 8px;
+}
+
+.quote {
+  font-size: 22px;
+  line-height: 1.7;
+  color: #4A453C;
+  margin-bottom: 24px;
+}
+
+.soft {
+  font-size: 13px;
+  color: #B7A99A;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.actions .btn {
+  flex: 1;
+}

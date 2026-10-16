@@ -1,6 +1,6 @@
 {
-  "navigationBarTitleText": "Echo",
-  "navigationBarBackgroundColor": "#F7F7F7",
+  "navigationBarTitleText": "陪我聊聊",
+  "navigationBarBackgroundColor": "#FDF6EC",
   "navigationStyle": "custom",
   "usingComponents": {}
 }

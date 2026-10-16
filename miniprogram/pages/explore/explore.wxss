@@ -1,0 +1,66 @@
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 32px 20px calc(32px + env(safe-area-inset-bottom));
+  background: #FDF6EC;
+  color: #5C5348;
+  font-family: "Yuanti SC", "STYuanti", "PingFang SC", sans-serif;
+}
+
+.header {
+  margin-bottom: 28px;
+  padding: 8px 4px 0;
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: #B7A99A;
+  margin-bottom: 10px;
+}
+
+.title {
+  font-size: 32px;
+  color: #4A453C;
+  margin-bottom: 10px;
+}
+
+.desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #8A8074;
+}
+
+.card {
+  background: #FFFDF8;
+  border-radius: 22px;
+  padding: 22px 20px;
+  margin-bottom: 14px;
+}
+
+.card.soon {
+  border: 1px solid rgba(232, 168, 124, 0.25);
+}
+
+.card.locked {
+  background: rgba(255, 253, 248, 0.72);
+  border: 1px dashed rgba(183, 169, 154, 0.55);
+}
+
+.card-kicker {
+  font-size: 11px;
+  color: #B7A99A;
+  margin-bottom: 8px;
+}
+
+.card-title {
+  font-size: 20px;
+  color: #4A453C;
+  margin-bottom: 8px;
+}
+
+.card-body {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #8A8074;
+}

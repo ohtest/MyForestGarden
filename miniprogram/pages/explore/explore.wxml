@@ -1,0 +1,25 @@
+<view class="page">
+  <view class="header">
+    <view class="eyebrow">山谷之声</view>
+    <view class="title">自我探索</view>
+    <view class="desc">用一张卡，或一段字，轻轻看见自己。</view>
+  </view>
+
+  <view class="card soon" bindtap="onOh">
+    <view class="card-kicker">即将到来 · 波次 2</view>
+    <view class="card-title">OH 卡</view>
+    <view class="card-body">抽一张图像，看看它先碰到你哪里。没有标准答案。</view>
+  </view>
+
+  <view class="card soon" bindtap="onDiary">
+    <view class="card-kicker">即将到来 · 波次 2</view>
+    <view class="card-title">山谷日记</view>
+    <view class="card-body">写一点 → 听见 → 投射点评 → 支持。写完也可以去聊聊。</view>
+  </view>
+
+  <view class="card locked" bindtap="onSand">
+    <view class="card-kicker">绑定后开放 · 波次 3</view>
+    <view class="card-title">沙盘推演</view>
+    <view class="card-body">在山谷里摆一盘，留下画面，再做一轮轻推演。</view>
+  </view>
+</view>

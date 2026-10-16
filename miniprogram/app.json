@@ -1,11 +1,41 @@
 {
-  "pages": ["pages/chat/chat"],
+  "pages": [
+    "pages/chat/chat",
+    "pages/book/book",
+    "pages/explore/explore"
+  ],
   "window": {
-    "navigationBarTitleText": "Echo",
-    "navigationBarBackgroundColor": "#F7F7F7",
+    "navigationBarTitleText": "山谷之声",
+    "navigationBarBackgroundColor": "#FDF6EC",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#EDEDED",
+    "backgroundColor": "#FDF6EC",
     "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "#B7A99A",
+    "selectedColor": "#E8A87C",
+    "backgroundColor": "#FDF6EC",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/chat/chat",
+        "text": "陪我聊聊",
+        "iconPath": "images/tab/chat.png",
+        "selectedIconPath": "images/tab/chat-active.png"
+      },
+      {
+        "pagePath": "pages/book/book",
+        "text": "答案之书",
+        "iconPath": "images/tab/book.png",
+        "selectedIconPath": "images/tab/book-active.png"
+      },
+      {
+        "pagePath": "pages/explore/explore",
+        "text": "自我探索",
+        "iconPath": "images/tab/explore.png",
+        "selectedIconPath": "images/tab/explore-active.png"
+      }
+    ]
   },
   "permission": {
     "scope.userLocation": {

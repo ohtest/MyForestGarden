@@ -1,6 +1,6 @@
 {
   "appid": "touristappid",
-  "projectname": "Echo",
+  "projectname": "山谷之声",
   "compileType": "miniprogram",
   "setting": {
     "es6": true,

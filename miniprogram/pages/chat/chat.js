@@ -37,6 +37,12 @@ Page({
     hourLabel: "傍晚了",
     weatherIcon: "",
     weatherKind: "clear",
+    temperature: null,
+    splashShow: false,
+    splashOn: false,
+    splashLeave: false,
+    splashSrc: "",
+    splashKind: "sunny",
     nextId: 1,
     lastRole: "",
     anchor: "",
@@ -47,12 +53,30 @@ Page({
     this.applyHour();
     this.loadWeather();
     this.hourTimer = setInterval(() => this.applyHour(), 60000);
-    this.speak(OPENING, 900);
+    this.splashStarted = false;
+    this.splashDone = false;
+    this.splashWait = setTimeout(() => this.beginSplash(), 900);
+  },
+
+  onShow() {
+    this.consumePendingChat();
   },
 
   onUnload() {
     if (this.hourTimer) clearInterval(this.hourTimer);
     if (this.typeTimer) clearInterval(this.typeTimer);
+    if (this.splashWait) clearTimeout(this.splashWait);
+    if (this.splashHide) clearTimeout(this.splashHide);
+  },
+
+  consumePendingChat() {
+    const pending = app.globalData.pendingChat;
+    if (!pending) return;
+    app.globalData.pendingChat = null;
+    if (pending.source === "answer-book" && pending.answer) {
+      const line = `你翻到：「${pending.answer}」\n\n想从这里说说吗？我在。`;
+      this.speak(line, 200);
+    }
   },
 
   applyHour() {
@@ -69,7 +93,7 @@ Page({
 
   setPlate() {
     const { hour, sky, plates, front } = this.data;
-    const src = `${app.globalData.apiBase}/art/weather/${hour}-${PLATE_OF[sky] || "clear"}.jpg`;
+    const src = `${app.globalData.apiBase}/art/weather/${hour}-${PLATE_OF[sky] || "clear"}.jpg?v=tuantuan`;
     if (plates[front] === src) return;
     const next = 1 - front;
     const updated = plates.slice();
@@ -113,10 +137,12 @@ Page({
             scene: data.scene || "autumn",
             sky,
             windy: !!data.windy,
+            temperature: typeof data.temperature === "number" ? data.temperature : null,
             weatherIcon: weatherGlyph(sky, this.data.hour),
             weatherKind: weatherKind(sky, this.data.hour),
           });
           this.setPlate();
+          this.beginSplash();
         },
       });
     };
@@ -125,6 +151,48 @@ Page({
       success: (res) => apply(res.latitude, res.longitude),
       fail: () => apply(),
     });
+  },
+
+  splashFile() {
+    const { sky, windy, temperature, hour } = this.data;
+    if (sky === "storm" || (hour === "night" && sky === "rain")) return ["storm", "splash-06-storm.jpg"];
+    if (sky === "snow") return ["snow", "splash-03-snow.jpg"];
+    if (sky === "rain") return ["rain", "splash-02-rain.jpg"];
+    if (sky === "fog") return ["fog", "splash-07-fog.jpg"];
+    if (windy) return ["wind", "splash-04-wind.jpg"];
+    if (sky === "cloudy") return ["cloudy", "splash-05-cloudy.jpg"];
+    if (typeof temperature === "number" && temperature >= 32 && hour === "noon") return ["heat", "splash-08-heat.jpg"];
+    return ["sunny", "splash-01-sunny.jpg"];
+  },
+
+  beginSplash() {
+    if (this.splashStarted) return;
+    this.splashStarted = true;
+    if (this.splashWait) clearTimeout(this.splashWait);
+    const [kind, file] = this.splashFile();
+    this.setData({
+      splashShow: true,
+      splashOn: true,
+      splashKind: kind,
+      splashSrc: `${app.globalData.apiBase}/art/tuantuan/splash/${file}?v=splash`,
+    });
+    if (wx.vibrateShort) wx.vibrateShort({ type: "light" });
+    this.splashHide = setTimeout(() => this.finishSplash(), 4200);
+  },
+
+  skipSplash() {
+    this.finishSplash();
+  },
+
+  finishSplash() {
+    if (this.splashDone) return;
+    this.splashDone = true;
+    if (this.splashHide) clearTimeout(this.splashHide);
+    this.setData({ splashLeave: true });
+    setTimeout(() => {
+      this.setData({ splashShow: false });
+      if (!this.data.messages.length) this.speak(OPENING, 200);
+    }, 460);
   },
 
   onSend() {

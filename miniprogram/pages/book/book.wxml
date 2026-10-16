@@ -1,0 +1,25 @@
+<view class="page">
+  <view class="glow"></view>
+
+  <view class="intro" wx:if="{{!revealed}}">
+    <view class="eyebrow">山谷之声</view>
+    <view class="title">答案之书</view>
+    <view class="hint">心里默念一个问题，或只是此刻的心情。\n然后翻开这一页——不是命运，是一面小镜子。</view>
+    <view class="open-btn {{flipping ? 'busy' : ''}}" bindtap="onOpen">翻开一页</view>
+  </view>
+
+  <view class="stage" wx:else>
+    <view class="book {{flipping ? 'flip' : ''}}">
+      <view class="page-face">
+        <view class="quote-mark">“</view>
+        <view class="quote">{{answer}}</view>
+        <view class="soft">这不是答案，是山谷里的一句低语。</view>
+      </view>
+    </view>
+
+    <view class="actions">
+      <view class="btn ghost {{flipping ? 'busy' : ''}}" bindtap="onAgain">再翻一页</view>
+      <view class="btn primary" bindtap="onGoChat">去聊聊</view>
+    </view>
+  </view>
+</view>
