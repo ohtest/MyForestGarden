@@ -9,6 +9,17 @@ function weatherGlyph(sky, hour) {
   return SKY_GLYPH[sky] || SKY_GLYPH.clear;
 }
 
+function sceneKind(sky, windy, temperature, hour) {
+  if (sky === "storm" || (hour === "night" && sky === "rain")) return "storm";
+  if (sky === "snow") return "snow";
+  if (sky === "rain") return "rain";
+  if (sky === "fog") return "fog";
+  if (windy) return "wind";
+  if (sky === "cloudy") return "cloudy";
+  if (typeof temperature === "number" && temperature >= 32 && hour === "noon") return "heat";
+  return "sunny";
+}
+
 function weatherKind(sky, hour) {
   if (hour === "night" && (sky === "clear" || sky === "partly")) return "moon";
   return SKY_GLYPH[sky] ? sky : "clear";
@@ -155,14 +166,18 @@ Page({
 
   splashFile() {
     const { sky, windy, temperature, hour } = this.data;
-    if (sky === "storm" || (hour === "night" && sky === "rain")) return ["storm", "splash-06-storm.jpg"];
-    if (sky === "snow") return ["snow", "splash-03-snow.jpg"];
-    if (sky === "rain") return ["rain", "splash-02-rain.jpg"];
-    if (sky === "fog") return ["fog", "splash-07-fog.jpg"];
-    if (windy) return ["wind", "splash-04-wind.jpg"];
-    if (sky === "cloudy") return ["cloudy", "splash-05-cloudy.jpg"];
-    if (typeof temperature === "number" && temperature >= 32 && hour === "noon") return ["heat", "splash-08-heat.jpg"];
-    return ["sunny", "splash-01-sunny.jpg"];
+    const kind = sceneKind(sky, windy, temperature, hour);
+    const file = {
+      storm: "splash-06-storm.jpg",
+      snow: "splash-03-snow.jpg",
+      rain: "splash-02-rain.jpg",
+      fog: "splash-07-fog.jpg",
+      wind: "splash-04-wind.jpg",
+      cloudy: "splash-05-cloudy.jpg",
+      heat: "splash-08-heat.jpg",
+      sunny: "splash-01-sunny.jpg",
+    }[kind];
+    return [kind, file];
   },
 
   beginSplash() {
