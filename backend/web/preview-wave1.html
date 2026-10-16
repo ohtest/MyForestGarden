@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>山谷之声 · 波次1验收</title>
+  <style>
+    :root {
+      --cream: #FDF6EC;
+      --ink: #5C5348;
+      --muted: #8A8074;
+      --soft: #B7A99A;
+      --peach: #E8A87C;
+      --peach2: #F2C4A0;
+      --paper: #FFFDF8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(232,168,124,.25), transparent 40%),
+        linear-gradient(160deg, #f7efe3, #e8dfd2 55%, #d9cfc0);
+      font-family: "Yuanti SC", "STYuanti", "PingFang SC", sans-serif;
+      color: var(--ink);
+    }
+    .phone {
+      width: 390px;
+      height: 780px;
+      border-radius: 36px;
+      background: var(--cream);
+      box-shadow: 0 30px 80px rgba(74,69,60,.25);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      border: 8px solid #3a342c;
+    }
+    .notch {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--soft);
+      font-size: 11px;
+      letter-spacing: .12em;
+    }
+    .screen { flex: 1; overflow: hidden; position: relative; }
+    .panel {
+      position: absolute;
+      inset: 0;
+      padding: 12px 20px 16px;
+      overflow: auto;
+      display: none;
+    }
+    .panel.on { display: block; }
+    .eyebrow { font-size: 12px; color: var(--soft); letter-spacing: .2em; margin-bottom: 8px; }
+    .title { font-size: 30px; margin: 0 0 10px; color: #4A453C; }
+    .desc { color: var(--muted); line-height: 1.7; font-size: 14px; margin-bottom: 24px; white-space: pre-wrap; }
+    .chat-shell {
+      height: calc(100% - 8px);
+      display: flex;
+      flex-direction: column;
+      background: #FAE9DA;
+      border-radius: 28px;
+      overflow: hidden;
+    }
+    .chat-hero {
+      padding: 14px;
+      text-align: center;
+    }
+    .pill {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(232,168,124,.35);
+      color: var(--soft);
+      font-size: 11px;
+    }
+    .msgs { flex: 1; padding: 8px 14px; overflow: auto; }
+    .row { display: flex; gap: 8px; margin-top: 10px; align-items: flex-start; }
+    .row.user { justify-content: flex-end; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--peach2) url("/art/tuantuan/tuantuan-default.jpg") center/cover;
+      flex-shrink: 0;
+    }
+    .bubble {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 16px 16px 16px 4px;
+      background: var(--paper);
+      line-height: 1.65;
+      font-size: 15px;
+      white-space: pre-wrap;
+    }
+    .user .bubble {
+      background: linear-gradient(135deg, var(--peach2), var(--peach));
+      color: var(--paper);
+      border-radius: 16px 16px 4px 16px;
+    }
+    .composer {
+      display: flex; gap: 10px; align-items: center;
+      padding: 10px 14px 16px;
+      background: rgba(250,233,218,.94);
+    }
+    .composer input {
+      flex: 1; border: 0; outline: 0;
+      border-radius: 999px; padding: 10px 16px;
+      background: #F1D9C3; color: var(--ink); font-size: 15px;
+    }
+    .send {
+      width: 38px; height: 38px; border-radius: 50%; border: 0;
+      background: linear-gradient(135deg, var(--peach2), var(--peach));
+      color: white; font-size: 16px; cursor: pointer;
+    }
+    .book-card {
+      background: var(--paper);
+      border-radius: 24px;
+      padding: 32px 26px;
+      min-height: 280px;
+      box-shadow: 0 18px 40px rgba(92,83,72,.08);
+      margin: 20px 0 24px;
+    }
+    .qmark { font-size: 48px; color: var(--peach2); line-height: 1; }
+    .quote { font-size: 22px; line-height: 1.7; margin: 8px 0 20px; }
+    .soft { font-size: 13px; color: var(--soft); }
+    .actions { display: flex; gap: 12px; }
+    .btn {
+      flex: 1; height: 48px; border: 0; border-radius: 999px;
+      font-size: 16px; cursor: pointer;
+      font-family: inherit;
+    }
+    .btn.primary { background: linear-gradient(135deg, var(--peach2), var(--peach)); color: white; }
+    .btn.ghost { background: rgba(232,168,124,.18); color: var(--muted); }
+    .card {
+      background: var(--paper);
+      border-radius: 22px;
+      padding: 20px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(232,168,124,.25);
+    }
+    .card.locked { border-style: dashed; border-color: rgba(183,169,154,.55); opacity: .9; }
+    .kicker { font-size: 11px; color: var(--soft); margin-bottom: 6px; }
+    .card h3 { margin: 0 0 8px; font-size: 20px; font-weight: 500; }
+    .card p { margin: 0; color: var(--muted); line-height: 1.7; font-size: 14px; }
+    .tabbar {
+      height: 64px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border-top: 1px solid rgba(183,169,154,.25);
+      background: var(--cream);
+    }
+    .tab {
+      border: 0; background: transparent; cursor: pointer;
+      color: var(--soft); font-size: 11px; font-family: inherit;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    }
+    .tab.on { color: var(--peach); }
+    .tab .ico { font-size: 18px; line-height: 1; }
+    .note {
+      position: fixed; left: 24px; bottom: 24px; max-width: 280px;
+      background: rgba(255,253,248,.92); padding: 12px 14px; border-radius: 14px;
+      font-size: 12px; color: var(--muted); line-height: 1.6;
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    }
+    .splash {
+      position: absolute; inset: 0; z-index: 30; background: #F7F1E6; overflow: hidden;
+      transition: opacity .45s ease;
+    }
+    .splash.leave { opacity: 0; pointer-events: none; }
+    .splash img {
+      width: 100%; height: 100%; object-fit: cover; opacity: 0;
+      transform: translateY(30px) scale(.95);
+      animation: splash-in 1.8s cubic-bezier(.22,1,.36,1) forwards, splash-breathe 2.4s ease-in-out 1.8s infinite;
+    }
+    .splash-fx {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image: radial-gradient(circle, rgba(255,214,140,.7) 1px, transparent 1.8px);
+      background-size: 22px 28px;
+      animation: splash-rise 3s linear infinite;
+    }
+    @keyframes splash-in { to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes splash-breathe {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-2px) scale(1.012); }
+    }
+    @keyframes splash-rise {
+      from { background-position: 0 20px; }
+      to { background-position: 6px -20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div class="notch">山谷之声 · 波次1验收</div>
+    <div class="screen">
+      <div class="splash" id="splash">
+        <img id="splashArt" alt="开屏" src="/art/tuantuan/splash/splash-01-sunny.jpg" />
+        <div class="splash-fx"></div>
+      </div>
+      <section class="panel on" id="chat">
+        <div class="chat-shell">
+          <div class="chat-hero"><span class="pill" id="hourPill">午后了</span></div>
+          <div class="msgs" id="msgs"></div>
+          <div class="composer">
+            <input id="draft" placeholder="嗯，我在听" maxlength="200" />
+            <button class="send" id="sendBtn" type="button">↑</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="book">
+        <div class="eyebrow">山谷之声</div>
+        <h1 class="title">答案之书</h1>
+        <p class="desc" id="bookIntro">心里默念一个问题，或只是此刻的心情。
+然后翻开这一页——不是命运，是一面小镜子。</p>
+        <div id="bookBlank">
+          <button class="btn primary" style="width:100%" id="openBtn" type="button">翻开一页</button>
+        </div>
+        <div id="bookResult" hidden>
+          <div class="book-card">
+            <div class="qmark">“</div>
+            <div class="quote" id="quote"></div>
+            <div class="soft">这不是答案，是山谷里的一句低语。</div>
+          </div>
+          <div class="actions">
+            <button class="btn ghost" id="againBtn" type="button">再翻一页</button>
+            <button class="btn primary" id="goChatBtn" type="button">去聊聊</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="explore">
+        <div class="eyebrow">山谷之声</div>
+        <h1 class="title">自我探索</h1>
+        <p class="desc">用一张卡，或一段字，轻轻看见自己。</p>
+        <div class="card">
+          <div class="kicker">即将到来 · 波次 2</div>
+          <h3>OH 卡</h3>
+          <p>抽一张图像，看看它先碰到你哪里。没有标准答案。</p>
+        </div>
+        <div class="card">
+          <div class="kicker">即将到来 · 波次 2</div>
+          <h3>山谷日记</h3>
+          <p>写一点 → 听见 → 投射点评 → 支持。写完也可以去聊聊。</p>
+        </div>
+        <div class="card locked">
+          <div class="kicker">绑定后开放 · 波次 3</div>
+          <h3>沙盘推演</h3>
+          <p>在山谷里摆一盘，留下画面，再做一轮轻推演。</p>
+        </div>
+      </section>
+    </div>
+    <nav class="tabbar">
+      <button class="tab on" data-tab="chat" type="button"><span class="ico">💬</span>陪我聊聊</button>
+      <button class="tab" data-tab="book" type="button"><span class="ico">📖</span>答案之书</button>
+      <button class="tab" data-tab="explore" type="button"><span class="ico">⛰</span>自我探索</button>
+    </nav>
+  </div>
+  <div class="note">这是波次1界面验收页（与小程序同结构）。开发者工具若仍卡网络，可先在这里验收交互与文案。</div>
+  <script>
+    const ANSWERS = [
+      "先停一下。你已经走得很用力了。","答案也许不在外面，而在你刚才犹豫的那一秒。","今天，允许自己慢半拍。",
+      "有些事不用立刻想清楚。","你比自己以为的更有力气。","把肩膀放下来一点。","不是你不够好，是这一段路太挤。",
+      "可以先照顾呼吸，再照顾问题。","你值得被温柔地对待，包括被自己。","别急着给今天下结论。",
+      "留一点空白给自己，不算浪费。","难过可以存在，它不会把你定义掉。","你已经在找路了，这就算开始。",
+      "有人懂当然好；没有的时候，我也在。","先喝口水，再继续想。","不必证明什么，才有资格休息。",
+      "小小的一步，也算往前。","把「应该」先放在门口。","你的感受是认真的，值得被听完。",
+      "混乱里也可以只抓住一件小事。","今晚的月亮不催你交答案。","允许自己说：我还不知道。",
+      "你不是一个人在雾里。","有些温柔，要先给自己。","事情可以拆小，再一个一个碰。",
+      "累了就先停，路还在。","你的边界，也可以是一种爱自己。","别和昨天的自己较劲。",
+      "现在这样就够当作起点。","听一听身体在说什么。","不必笑着撑过所有时刻。",
+      "慢下来，才听得见自己。","你已经做得比你记得的更多。","把期待调小一点，把呼吸调匀一点。",
+      "可以求助，这不是软弱。","今天的你，不用成为任何人。","把心里那句重话，先改成轻一点的。",
+      "有些告别，是为了腾地方给新的。","你配拥有不解释的片刻。","先安放自己，再回应世界。",
+      "迷茫不是失败，是还在辨认方向。","给情绪一个座位，别把它赶出去。","你走的路，别人未必看得见，但它是真的。",
+      "轻一点对自己说话。","答案会迟到，陪伴可以准时。","留下力气给明天早晨。",
+      "你的节奏，不必对齐别人的钟。","有时候，不行动也是一种照顾。","把「完美」换成「足够」。",
+      "你正在学会站在自己这边。","风会停的，你也可以靠一靠。","不必一次走完全程。",
+      "心里的结，可以慢慢解。","你比焦虑更宽广一点。","今晚，只要求自己安稳一点。",
+      "被理解之前，先被自己接住。","犹豫，说明你在认真对待。","把目光从结果上挪开一会儿。",
+      "山谷很大，容得下你的沉默。","你可以改变主意，也可以改变步伐。","先完成「在场」，再谈「做好」。",
+      "有光的地方，通常也有影子，都没关系。","你的故事还在写，别急着翻到结局。","累的时候，诚实比坚强更有用。",
+      "让一句好听的话，在心里多停一秒。","外面嘈杂时，回到呼吸就好。","你有权把今天过成很小的一天。",
+      "不必赶在情绪前面奔跑。","柔软不是退让，是另一种力量。","把担心写成一行字，它会轻一点。",
+      "你配得到耐心，包括过程中的耐心。","有些答案，要在睡醒后才露面。","先活过这一小时，也算赢。",
+      "你不是拖延，你是在积攒勇气。","让身体找一个舒服的姿势。","世界很大，你的感受也可以很大。",
+      "把「我必须」改成「我可以试试」。","你已经在照顾自己了，哪怕只是打开这里。","这页不是命运，是一面小镜子。",
+      "若愿说，我在；若不愿，也没关系。"
+    ];
+    let current = "";
+    const h = new Date().getHours();
+    const hourLabel = h >= 5 && h < 10 ? "清晨了" : h >= 10 && h < 17 ? "午后了" : h >= 17 && h < 19 ? "傍晚了" : "夜里了";
+    document.getElementById("hourPill").textContent = hourLabel;
+
+    const SPLASH_FILE = {
+      sunny: "splash-01-sunny.jpg", rain: "splash-02-rain.jpg", snow: "splash-03-snow.jpg",
+      wind: "splash-04-wind.jpg", cloudy: "splash-05-cloudy.jpg", storm: "splash-06-storm.jpg",
+      fog: "splash-07-fog.jpg", heat: "splash-08-heat.jpg",
+    };
+    function splashKind() {
+      if (h >= 10 && h < 17 && h === 12) return "heat";
+      if (h >= 17 || h < 5) return "cloudy";
+      return "sunny";
+    }
+    const splash = document.getElementById("splash");
+    const splashArt = document.getElementById("splashArt");
+    splashArt.src = "/art/tuantuan/splash/" + SPLASH_FILE[splashKind()];
+    function finishSplash() {
+      if (splash.classList.contains("leave")) return;
+      splash.classList.add("leave");
+      setTimeout(() => {
+        splash.remove();
+        const msgs = document.getElementById("msgs");
+        msgs.innerHTML = `<div class="row"><div class="avatar"></div><div class="bubble">我在这里。你想说什么都可以</div></div>`;
+      }, 460);
+    }
+    splash.addEventListener("click", finishSplash);
+    setTimeout(finishSplash, 4200);
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((t) => t.classList.remove("on"));
+        document.querySelectorAll(".panel").forEach((p) => p.classList.remove("on"));
+        tab.classList.add("on");
+        document.getElementById(tab.dataset.tab).classList.add("on");
+      });
+    });
+
+    function pick() {
+      const pool = ANSWERS.filter((a) => a !== current);
+      current = (pool.length ? pool : ANSWERS)[Math.floor(Math.random() * (pool.length || ANSWERS.length))];
+      document.getElementById("quote").textContent = current;
+      document.getElementById("bookBlank").hidden = true;
+      document.getElementById("bookResult").hidden = false;
+      document.getElementById("bookIntro").hidden = true;
+    }
+    document.getElementById("openBtn").onclick = pick;
+    document.getElementById("againBtn").onclick = pick;
+    document.getElementById("goChatBtn").onclick = () => {
+      const msgs = document.getElementById("msgs");
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `<div class="avatar"></div><div class="bubble">你翻到：「${current}」\n\n想从这里说说吗？我在。</div>`;
+      msgs.appendChild(row);
+      msgs.scrollTop = msgs.scrollHeight;
+      document.querySelector('[data-tab="chat"]').click();
+    };
+
+    async function send() {
+      const input = document.getElementById("draft");
+      const text = input.value.trim();
+      if (!text) return;
+      const msgs = document.getElementById("msgs");
+      const user = document.createElement("div");
+      user.className = "row user";
+      user.innerHTML = `<div class="bubble">${text}</div>`;
+      msgs.appendChild(user);
+      input.value = "";
+      const wait = document.createElement("div");
+      wait.className = "row";
+      wait.innerHTML = `<div class="avatar"></div><div class="bubble">…</div>`;
+      msgs.appendChild(wait);
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ message: text }),
+        });
+        const data = await res.json();
+        wait.querySelector(".bubble").textContent = data.reply || data.detail || "暂时连不上。";
+      } catch {
+        wait.querySelector(".bubble").textContent = "暂时连不上。";
+      }
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+    document.getElementById("sendBtn").onclick = send;
+    document.getElementById("draft").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") send();
+    });
+  </script>
+</body>
+</html>

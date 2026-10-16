@@ -167,6 +167,13 @@ Page({
 
   beginSplash() {
     if (this.splashStarted) return;
+    if (!app.globalData.splashPending) {
+      if (!this.data.messages.length && !this.splashDone) {
+        this.splashDone = true;
+        this.speak(OPENING, 200);
+      }
+      return;
+    }
     this.splashStarted = true;
     if (this.splashWait) clearTimeout(this.splashWait);
     const [kind, file] = this.splashFile();
@@ -174,7 +181,7 @@ Page({
       splashShow: true,
       splashOn: true,
       splashKind: kind,
-      splashSrc: `${app.globalData.apiBase}/art/tuantuan/splash/${file}?v=splash`,
+      splashSrc: `/images/tuantuan/splash/${file}`,
     });
     if (wx.vibrateShort) wx.vibrateShort({ type: "light" });
     this.splashHide = setTimeout(() => this.finishSplash(), 4200);
@@ -187,6 +194,7 @@ Page({
   finishSplash() {
     if (this.splashDone) return;
     this.splashDone = true;
+    app.globalData.splashPending = false;
     if (this.splashHide) clearTimeout(this.splashHide);
     this.setData({ splashLeave: true });
     setTimeout(() => {
