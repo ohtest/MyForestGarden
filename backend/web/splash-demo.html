@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>开屏光照 · 验收演示</title>
+  <link rel="stylesheet" href="/css/splash-light.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 28px 20px 48px;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(255,210,160,.28), transparent 42%),
+        radial-gradient(circle at 85% 20%, rgba(120,100,160,.16), transparent 40%),
+        linear-gradient(165deg, #14121a, #242028 50%, #16141c);
+      color: #f5efe6;
+      font-family: "Yuanti SC", "STYuanti", "PingFang SC", sans-serif;
+    }
+    h1 { margin: 0 0 6px; font-size: 26px; font-weight: 500; letter-spacing: .12em; text-align: center; }
+    .sub { text-align: center; color: rgba(245,239,230,.5); font-size: 12px; letter-spacing: .16em; margin-bottom: 8px; }
+    .note {
+      text-align: center; color: rgba(242,196,160,.7); font-size: 12px;
+      letter-spacing: .08em; margin: 0 auto 24px; max-width: 720px; line-height: 1.6;
+    }
+    h2 {
+      margin: 28px 0 14px; font-size: 14px; font-weight: 500;
+      letter-spacing: .2em; text-align: center; color: rgba(245,239,230,.65);
+    }
+    .grid {
+      display: flex; flex-wrap: nowrap; gap: 14px;
+      justify-content: center; overflow-x: auto; padding-bottom: 8px;
+    }
+    .card { width: 168px; flex-shrink: 0; }
+    .label { text-align: center; font-size: 12px; letter-spacing: .2em; margin-bottom: 8px; color: rgba(245,239,230,.75); }
+    .phone {
+      width: 168px; height: 336px; border-radius: 20px; border: 4px solid #3a342c;
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+    }
+    .phone .splash-caption { font-size: 11px; }
+    .meta {
+      margin-top: 8px; text-align: center; font-size: 11px;
+      color: rgba(245,239,230,.4); letter-spacing: .06em; line-height: 1.5;
+    }
+    .controls {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 20px;
+    }
+    .controls button, .controls a {
+      appearance: none; border: 1px solid rgba(242,196,160,.35); background: transparent;
+      color: #F2C4A0; font: inherit; font-size: 12px; letter-spacing: .1em;
+      padding: 8px 14px; border-radius: 999px; cursor: pointer; text-decoration: none;
+    }
+    .controls button:hover, .controls a:hover { background: rgba(242,196,160,.12); }
+    .controls button.on { background: rgba(242,196,160,.2); }
+  </style>
+</head>
+<body>
+  <h1>山谷之声 · 开屏光照</h1>
+  <p class="sub">时段判断 → 光线渲染 → 天气叠加 · 25 组合配置表</p>
+  <p class="note">验收：阴天三时段光感不同；晴/雨/风/雾各用本天气卡；深夜无光圈。</p>
+
+  <h2>验收 A · 同一阴天 × 三时段</h2>
+  <div class="grid" id="acceptCloudy"></div>
+
+  <h2>验收 B · 深夜·雾（无光圈）</h2>
+  <div class="grid" id="acceptFog"></div>
+
+  <h2>五时段 · 当前天气预览</h2>
+  <div class="controls" id="weatherBtns"></div>
+  <div class="grid" id="periodGrid" style="margin-top:16px"></div>
+  <div class="controls" style="margin-top:24px">
+    <a id="liveLink" href="/?look=1" target="_blank">实机开屏</a>
+  </div>
+
+  <script src="/js/splashLight.js"></script>
+  <script src="/js/splashRain.js"></script>
+  <script>
+    (function bootSplashDemo() {
+      try {
+        if (!window.SplashLight) throw new Error("SplashLight missing");
+        const { SLOTS, WEATHERS, pickSplashByKey } = window.SplashLight;
+        const acceptCloudy = document.getElementById("acceptCloudy");
+        const acceptFog = document.getElementById("acceptFog");
+        const periodGrid = document.getElementById("periodGrid");
+        const weatherBtns = document.getElementById("weatherBtns");
+
+        function mountCard(parent, slot, weather, opts) {
+          const breathe = !opts || opts.breathe !== false;
+          const pick = pickSplashByKey(slot, weather);
+          const card = document.createElement("div");
+          card.className = "card";
+          const hour = String(pick.sampleHour).padStart(2, "0");
+          const label = document.createElement("div");
+          label.className = "label";
+          label.textContent = pick.slotLabel;
+          const stage = document.createElement("div");
+          stage.className = "phone splash-stage " + pick.lightClass;
+          stage.setAttribute("style", pick.splashStyle);
+          const img = document.createElement("img");
+          img.className = "splash-art";
+          img.src = "/art/tuantuan/splash/" + pick.file;
+          img.alt = pick.caption;
+          if (breathe) img.style.animation = "splash-breathe 2.8s ease-in-out infinite";
+          stage.appendChild(img);
+          ["fill", "hi", "shade", "key", "rim", "shadow", "lift", "body", "veil", "bloom", "period-fx", "weather-fx"].forEach(function (name) {
+            const layer = document.createElement("div");
+            layer.className = "splash-" + name;
+            stage.appendChild(layer);
+          });
+          const caption = document.createElement("div");
+          caption.className = "splash-caption";
+          caption.textContent = pick.caption;
+          stage.appendChild(caption);
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          meta.innerHTML = pick.range + " · 示例 " + hour + ":00<br/>卡面 " +
+            pick.file.replace("splash-", "").replace(".jpg", "");
+          card.appendChild(label);
+          card.appendChild(stage);
+          card.appendChild(meta);
+          parent.appendChild(card);
+          if (weather === "rain" && window.SplashRain) {
+            requestAnimationFrame(function () {
+              window.SplashRain.mount(stage, { late: slot === "late" });
+            });
+          }
+          return card;
+        }
+
+        ["morning", "midday", "evening"].forEach(function (s) {
+          mountCard(acceptCloudy, s, "cloudy");
+        });
+        mountCard(acceptFog, "late", "fog");
+
+        function renderPeriods(weather) {
+          periodGrid.innerHTML = "";
+          Object.keys(SLOTS).forEach(function (s) { mountCard(periodGrid, s, weather); });
+          weatherBtns.querySelectorAll("button").forEach(function (b) {
+            b.classList.toggle("on", b.dataset.w === weather);
+          });
+          document.getElementById("liveLink").href =
+            "/?look=1&at=08:00&sky=" + (weather === "clear" ? "clear" : weather);
+        }
+
+        Object.keys(WEATHERS).forEach(function (w) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.dataset.w = w;
+          b.textContent = WEATHERS[w].label;
+          b.onclick = function () { renderPeriods(w); };
+          weatherBtns.appendChild(b);
+        });
+
+        const morphBtn = document.createElement("button");
+        morphBtn.type = "button";
+        morphBtn.textContent = "色温过渡演示";
+        morphBtn.onclick = function () {
+          const stages = ["morning", "midday", "afternoon", "evening", "late"];
+          var i = 0;
+          const host = document.createElement("div");
+          host.className = "grid";
+          host.style.marginTop = "16px";
+          periodGrid.parentNode.insertBefore(host, periodGrid.nextSibling);
+          const card = mountCard(host, stages[0], "cloudy", { breathe: false });
+          const stage = card.querySelector(".splash-stage");
+          const caption = card.querySelector(".splash-caption");
+          const label = card.querySelector(".label");
+          const meta = card.querySelector(".meta");
+          const timer = setInterval(function () {
+            i = (i + 1) % stages.length;
+            const pick = pickSplashByKey(stages[i], "cloudy");
+            stage.className = "phone splash-stage " + pick.lightClass;
+            stage.setAttribute("style", pick.splashStyle);
+            caption.textContent = pick.caption;
+            label.textContent = pick.slotLabel;
+            meta.innerHTML = pick.range + " · 示例 " +
+              String(pick.sampleHour).padStart(2, "0") + ":00<br/>1.25s 色温过渡";
+            if (i === 0) {
+              clearInterval(timer);
+              setTimeout(function () { host.remove(); }, 1600);
+            }
+          }, 1600);
+        };
+        weatherBtns.appendChild(morphBtn);
+        renderPeriods("clear");
+      } catch (err) {
+        const note = document.querySelector(".note");
+        if (note) note.textContent = "演示脚本错误：" + err.message;
+        console.error(err);
+      }
+    })();
+  </script>
+  <style>
+    @keyframes splash-breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.015); }
+    }
+  </style>
+</body>
+</html>

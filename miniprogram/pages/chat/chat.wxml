@@ -87,8 +87,45 @@
     </view>
   </view>
 
-  <view wx:if="{{splashShow}}" class="splash {{splashOn ? 'on' : ''}} {{splashLeave ? 'leave' : ''}}" catchtap="skipSplash">
+  <view
+    wx:if="{{splashShow}}"
+    class="splash {{splashLightClass}} {{splashOn ? 'on' : ''}} {{splashLeave ? 'leave' : ''}}"
+    style="{{splashStyle}}"
+    catchtap="skipSplash"
+  >
     <image class="splash-art" src="{{splashSrc}}" mode="aspectFill" binderror="skipSplash"></image>
-    <view class="splash-fx fx-{{splashKind}}"></view>
+    <view class="splash-fill"></view>
+    <view class="splash-hi"></view>
+    <view class="splash-shade"></view>
+    <view class="splash-key"></view>
+    <view class="splash-rim"></view>
+    <view class="splash-shadow"></view>
+    <view class="splash-lift"></view>
+    <view class="splash-body"></view>
+    <view class="splash-veil"></view>
+    <view class="splash-bloom"></view>
+    <view class="splash-period-fx"></view>
+    <view class="splash-weather-fx">
+      <view wx:if="{{splashRain}}" class="splash-rain {{splashRain.late ? 'late' : ''}}">
+        <view class="splash-rain-ground"></view>
+        <view class="splash-rain-mist"></view>
+        <view
+          class="splash-rain-layer layer-{{layer.id}}"
+          wx:for="{{splashRain.layers}}"
+          wx:for-item="layer"
+          wx:key="id"
+          style="filter: blur({{layer.blur}}px);"
+        >
+          <view
+            class="splash-rain-drop {{drop.hero ? 'hero' : ''}}"
+            wx:for="{{layer.drops}}"
+            wx:for-item="drop"
+            wx:key="id"
+            style="left:{{drop.left}}%;top:{{drop.top}}%;width:{{drop.thick}}px;height:{{drop.len}}px;opacity:{{drop.alpha}};animation-duration:{{drop.dur}}s;animation-delay:{{drop.delay}}s;--sway:{{drop.sway}}px;--angle:{{drop.angle}}deg;"
+          ></view>
+        </view>
+      </view>
+    </view>
+    <view class="splash-caption" wx:if="{{splashCaption}}">{{splashCaption}}</view>
   </view>
 </view>

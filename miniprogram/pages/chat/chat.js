@@ -1,6 +1,7 @@
 const app = getApp();
 const OPENING = "我在这里。你想说什么都可以";
 const { lookup } = require("../../utils/valleyScene");
+const { pickSplash, buildSplashRain } = require("../../utils/splashScene");
 const sound = require("../../utils/valleySound");
 
 function spots(count, kind) {
@@ -51,7 +52,12 @@ Page({
     splashOn: false,
     splashLeave: false,
     splashSrc: "",
-    splashKind: "sunny",
+    splashKind: "clear",
+    splashTone: "morning",
+    splashCaption: "",
+    splashLightClass: "",
+    splashStyle: "",
+    splashRain: null,
     nextId: 1,
     anchor: "",
   },
@@ -84,7 +90,7 @@ Page({
   },
 
   onUnload() {
-    [this.hourTimer, this.nodTimer, this.typeTimer, this.splashWait, this.splashHide, this.ghostTimer, this.recordTimer, this.poseTimer].forEach((id) => {
+    [this.hourTimer, this.nodTimer, this.typeTimer, this.splashWait, this.splashHide, this.ghostTimer, this.recordTimer, this.poseTimer, this.splashRainHero].forEach((id) => {
       if (id) clearTimeout(id);
       if (id) clearInterval(id);
     });
@@ -103,6 +109,10 @@ Page({
     const pose = scene.period === "noon" && !this.data.focused && !this.data.sending ? "nap" : this.data.pose;
     const drops = this.data.lowPower ? [] : spots(scene.particles === "snow" ? 16 : 22, scene.particles);
     this.setData({ scene, drops, pose: this.data.pose === "think" ? "think" : pose });
+    // 跨时段刷新：开屏仍在时按新时段重渲光线
+    if (this.data.splashShow && !this.splashDone) {
+      this.applySplashPick(this.splashPick());
+    }
     this.syncSound();
   },
 
@@ -122,6 +132,11 @@ Page({
         success: (res) => {
           const data = res.data || {};
           this.sky = data.sky || "clear";
+          this.weatherMeta = {
+            sky: this.sky,
+            windy: !!data.windy,
+            temperature: data.temperature,
+          };
           this.applyScene();
           this.beginSplash();
         },
@@ -135,13 +150,46 @@ Page({
     });
   },
 
-  splashFile() {
-    const scene = this.data.scene;
-    if (scene.weather === "snow") return ["snow", "splash-03-snow.jpg"];
-    if (scene.weather === "rain" && (scene.period === "night" || scene.period === "late")) return ["storm", "splash-06-storm.jpg"];
-    if (scene.weather === "rain") return ["rain", "splash-02-rain.jpg"];
-    if (scene.weather === "cloudy") return ["cloudy", "splash-05-cloudy.jpg"];
-    return ["sunny", "splash-01-sunny.jpg"];
+  /** 开屏：时段光线 × 天气质感（配置表） */
+  splashPick() {
+    return pickSplash(new Date().getHours(), {
+      sky: this.sky || this.data.scene.weather || "clear",
+      windy: !!(this.weatherMeta && this.weatherMeta.windy),
+    });
+  },
+
+  applySplashPick(pick) {
+    const rain =
+      pick.weather === "rain"
+        ? buildSplashRain(pick.slot === "late", !!this.data.lowPower)
+        : null;
+    this.setData({
+      splashKind: pick.kind,
+      splashTone: pick.tone,
+      splashCaption: pick.caption,
+      splashLightClass: pick.lightClass,
+      splashStyle: pick.splashStyle,
+      splashSrc: `/images/tuantuan/splash/${pick.file}`,
+      splashRain: rain,
+    });
+    if (this.splashRainHero) clearInterval(this.splashRainHero);
+    this.splashRainHero = null;
+    if (rain) {
+      this.splashRainHero = setInterval(() => this.pulseSplashRainHero(), 7000 + Math.random() * 3000);
+    }
+  },
+
+  pulseSplashRainHero() {
+    const rain = this.data.splashRain;
+    if (!rain || !rain.layers) return;
+    const near = rain.layers.find((l) => l.id === "near");
+    if (!near || !near.drops.length) return;
+    const idx = Math.floor(Math.random() * near.drops.length);
+    const key = `splashRain.layers[${rain.layers.indexOf(near)}].drops[${idx}].hero`;
+    this.setData({ [key]: true });
+    setTimeout(() => {
+      if (this.data.splashRain) this.setData({ [key]: false });
+    }, 850);
   },
 
   beginSplash() {
@@ -156,13 +204,8 @@ Page({
     }
     this.splashStarted = true;
     if (this.splashWait) clearTimeout(this.splashWait);
-    const pair = this.splashFile();
-    this.setData({
-      splashShow: true,
-      splashOn: true,
-      splashKind: pair[0],
-      splashSrc: `/images/tuantuan/splash/${pair[1]}`,
-    });
+    this.applySplashPick(this.splashPick());
+    this.setData({ splashShow: true, splashOn: true });
     if (wx.vibrateShort) wx.vibrateShort({ type: "light" });
     this.splashHide = setTimeout(() => this.finishSplash(), 4200);
   },
@@ -176,9 +219,11 @@ Page({
     this.splashDone = true;
     app.globalData.splashPending = false;
     if (this.splashHide) clearTimeout(this.splashHide);
+    if (this.splashRainHero) clearInterval(this.splashRainHero);
+    this.splashRainHero = null;
     this.setData({ splashLeave: true });
     setTimeout(() => {
-      this.setData({ splashShow: false });
+      this.setData({ splashShow: false, splashRain: null });
       if (!this.data.messages.length) this.speak(OPENING, 200);
     }, 460);
   },

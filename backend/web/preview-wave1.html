@@ -369,8 +369,40 @@
       transform: translateY(30px) scale(.95);
       animation: splash-in 1.8s cubic-bezier(.22,1,.36,1) forwards, splash-breathe 2.4s ease-in-out 1.8s infinite;
     }
+    .splash-tone {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      mix-blend-mode: soft-light;
+    }
+    .splash.tone-morning .splash-tone {
+      background: linear-gradient(180deg, rgba(255,214,180,.35), rgba(255,236,210,.12) 45%, rgba(255,200,160,.2));
+    }
+    .splash.tone-midday .splash-tone {
+      background: linear-gradient(180deg, rgba(255,248,220,.28), rgba(255,255,255,.05) 40%, rgba(255,220,140,.18));
+    }
+    .splash.tone-afternoon .splash-tone {
+      background: linear-gradient(180deg, rgba(255,200,120,.22), rgba(232,168,100,.16) 50%, rgba(200,120,80,.22));
+    }
+    .splash.tone-evening .splash-tone {
+      background: linear-gradient(180deg, rgba(80,60,120,.28), rgba(120,80,140,.2) 40%, rgba(40,30,70,.35));
+      mix-blend-mode: multiply;
+    }
+    .splash.tone-late .splash-tone {
+      background: linear-gradient(180deg, rgba(20,24,48,.45), rgba(30,28,60,.35) 50%, rgba(10,12,28,.55));
+      mix-blend-mode: multiply;
+    }
+    .splash-caption {
+      position: absolute; left: 0; right: 0; bottom: 12%; z-index: 3;
+      text-align: center; font-size: 14px; letter-spacing: .2em;
+      color: rgba(255,250,240,.92); text-shadow: 0 1px 8px rgba(40,30,20,.45);
+      opacity: 0; animation: splash-caption-in 1.2s ease .4s both;
+    }
+    .splash.tone-morning .splash-caption,
+    .splash.tone-midday .splash-caption,
+    .splash.tone-afternoon .splash-caption {
+      color: rgba(90,70,50,.85); text-shadow: 0 1px 6px rgba(255,255,255,.5);
+    }
     .splash-fx {
-      position: absolute; inset: 0; pointer-events: none;
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
       background-image: radial-gradient(circle, rgba(255,214,140,.7) 1px, transparent 1.8px);
       background-size: 22px 28px;
       animation: splash-rise 3s linear infinite;
@@ -384,6 +416,10 @@
       from { background-position: 0 20px; }
       to { background-position: 6px -20px; }
     }
+    @keyframes splash-caption-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
+    }
   </style>
 </head>
 <body>
@@ -392,7 +428,9 @@
     <div class="screen">
       <div class="splash" id="splash">
         <img id="splashArt" alt="开屏" src="/art/tuantuan/splash/splash-01-sunny.jpg" />
+        <div class="splash-tone" id="splashTone"></div>
         <div class="splash-fx"></div>
+        <div class="splash-caption" id="splashCaption"></div>
       </div>
       <section class="panel on" id="chat">
         <div class="chat-shell">
@@ -559,14 +597,49 @@
       wind: "splash-04-wind.jpg", cloudy: "splash-05-cloudy.jpg", storm: "splash-06-storm.jpg",
       fog: "splash-07-fog.jpg", heat: "splash-08-heat.jpg",
     };
-    function splashKind() {
-      if (h >= 10 && h < 17 && h === 12) return "heat";
-      if (h >= 17 || h < 5) return "cloudy";
-      return "sunny";
+    const SPLASH_SLOT_LABEL = {
+      morning: "早上", midday: "中午", afternoon: "下午", evening: "晚上", late: "深夜",
+    };
+    /** 开屏五段：早 5–11 / 中 11–14 / 下午 14–17 / 晚上 17–23 / 深夜 23–5 */
+    function splashSlot(hour) {
+      if (hour >= 5 && hour < 11) return "morning";
+      if (hour >= 11 && hour < 14) return "midday";
+      if (hour >= 14 && hour < 17) return "afternoon";
+      if (hour >= 17 && hour < 23) return "evening";
+      return "late";
+    }
+    function splashPick(hour) {
+      const slot = splashSlot(hour);
+      // 验收页无实时天气：按时段默认天气氛围，可用 ?sky=rain 等覆盖
+      const q = new URLSearchParams(location.search);
+      const sky = q.get("sky") || ({
+        morning: "clear", midday: "clear", afternoon: "clear", evening: "cloudy", late: "fog",
+      }[slot]);
+      let kind = "sunny";
+      if (sky === "snow") kind = "snow";
+      else if (sky === "storm" || (sky === "rain" && (slot === "evening" || slot === "late"))) kind = "storm";
+      else if (sky === "rain") kind = "rain";
+      else if (sky === "fog" || (slot === "late" && (sky === "cloudy" || sky === "partly"))) kind = "fog";
+      else if (sky === "cloudy" || sky === "partly") kind = "cloudy";
+      else if (slot === "midday") kind = "heat";
+      else if (slot === "afternoon") kind = "wind";
+      else if (slot === "evening") kind = "cloudy";
+      else if (slot === "late") kind = "fog";
+      else kind = "sunny";
+      const weatherLabel = { sunny: "晴", rain: "雨", snow: "雪", wind: "有风", cloudy: "阴", storm: "暴雨", fog: "雾", heat: "炎热" }[kind] || "晴";
+      return {
+        slot,
+        kind,
+        file: SPLASH_FILE[kind],
+        caption: `${SPLASH_SLOT_LABEL[slot]} · ${weatherLabel}`,
+      };
     }
     const splash = document.getElementById("splash");
     const splashArt = document.getElementById("splashArt");
-    splashArt.src = "/art/tuantuan/splash/" + SPLASH_FILE[splashKind()];
+    const pick = splashPick(h);
+    splash.className = "splash tone-" + pick.slot;
+    splashArt.src = "/art/tuantuan/splash/" + pick.file;
+    document.getElementById("splashCaption").textContent = pick.caption;
     function finishSplash() {
       if (splash.classList.contains("leave")) return;
       splash.classList.add("leave");

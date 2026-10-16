@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>山谷之声</title>
+  <link rel="stylesheet" href="/css/splash-light.css" />
   <style>
     :root {
       --cream: #FDF6EC;
@@ -85,12 +86,11 @@
     .phone {
       width: min(390px, 92vw);
       height: min(760px, 84vh);
-      display: flex;
-      flex-direction: column;
+      display: block;
       overflow: hidden;
-      background: transparent;
+      background: #243044;
       border-radius: var(--card);
-      box-shadow: none;
+      box-shadow: 0 28px 64px rgba(92, 83, 72, 0.18);
       transition: background 2.4s ease, box-shadow 2s ease;
       position: relative;
       isolation: isolate;
@@ -106,24 +106,146 @@
     .phone::before { mix-blend-mode: multiply; background-color: var(--phone-shade, transparent); }
     .phone::after { mix-blend-mode: screen; background-color: var(--phone-glow, transparent); }
     .phone > * { position: relative; z-index: 1; }
-    .sheet {
-      margin-top: 46%;
-      flex: 1;
-      min-height: 0;
+    .phone > .topbar { z-index: 5; display: flex; align-items: center; gap: 8px; padding: 0 14px; min-width: 0; }
+    .phone[data-sky="dawn"] .topbar { background: #9eb8c8; }
+    .phone[data-sky="morning"] .topbar { background: #8ec0e4; }
+    .phone[data-sky="noon"] .topbar { background: #6eb6e6; }
+    .phone[data-sky="afternoon"] .topbar { background: #e7a15a; }
+    .phone[data-sky="dusk"] .topbar { background: #e7a08a; }
+    .phone[data-sky="night"] .topbar { background: #10182c; }
+    .phone[data-sky="late"] .topbar { background: #070b14; }
+    .brand { font-size: 15px; letter-spacing: 2px; white-space: nowrap; color: #243044; font-weight: 600; }
+    .phone[data-sky="night"] .brand, .phone[data-sky="late"] .brand, .phone[data-sky="afternoon"] .brand { color: #f7f1e6; }
+    .capsule {
+      margin-left: auto;
+      max-width: 58%;
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 12px;
+      line-height: 1.4;
+      background: rgba(253, 246, 236, 0.88);
+      color: #3d342c;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .skyband { position: relative; overflow: hidden; z-index: 1; }
+    .phone[data-sky="dawn"] .skyband { background: linear-gradient(#c5d5df 0%, #f3d7c4 46%, #e7c4a4 100%); }
+    .phone[data-sky="morning"] .skyband { background: linear-gradient(#b9daf0 0%, #f4ecd0 48%, #d5e2b8 100%); }
+    .phone[data-sky="noon"] .skyband { background: linear-gradient(#8ec8ee 0%, #f6e7b0 42%, #c9d98a 100%); }
+    .phone[data-sky="afternoon"] .skyband { background: linear-gradient(#f0b56a 0%, #f6d7a4 40%, #e2c07a 100%); }
+    .phone[data-sky="dusk"] .skyband { background: linear-gradient(#f0b09a 0%, #e36a42 40%, #f2b56a 78%, #e8c48a 100%); }
+    .phone[data-sky="night"] .skyband { background: linear-gradient(#0c1424 0%, #1c2c44 55%, #243044 100%); }
+    .phone[data-sky="late"] .skyband { background: linear-gradient(#05080f 0%, #121a28 70%, #1a2434 100%); }
+    .ridge { position: absolute; left: -4%; right: -4%; }
+    .ridge.far {
+      bottom: 34%; height: 38%; background: #a3b896;
+      clip-path: polygon(0 78%, 6% 70%, 14% 82%, 22% 48%, 31% 74%, 40% 36%, 49% 68%, 58% 42%, 67% 72%, 78% 30%, 88% 64%, 100% 46%, 100% 100%, 0 100%);
+    }
+    .ridge.near {
+      bottom: -2%; height: 42%; background: #5e7a52;
+      clip-path: polygon(0 62%, 8% 48%, 18% 70%, 27% 34%, 38% 58%, 48% 28%, 60% 64%, 72% 40%, 84% 66%, 94% 44%, 100% 58%, 100% 100%, 0 100%);
+    }
+    .phone[data-sky="dusk"] .ridge.far { background: #7a5a72; }
+    .phone[data-sky="dusk"] .ridge.near { background: #4a342c; }
+    .phone[data-sky="night"] .ridge.far, .phone[data-sky="late"] .ridge.far { background: #3a4a62; }
+    .phone[data-sky="night"] .ridge.near, .phone[data-sky="late"] .ridge.near { background: #1c2838; }
+    .skyband > .haze { position: absolute; left: 0; right: 0; bottom: 34%; height: 16%; background: linear-gradient(transparent, rgba(255,248,236,.22) 50%, transparent); filter: blur(6px); }
+    .trees { position: absolute; left: 0; right: 0; bottom: 6%; height: 28%; background:
+      radial-gradient(ellipse 10px 22px at 8% 100%, #3d5538 0 70%, transparent 72%),
+      radial-gradient(ellipse 7px 16px at 14% 100%, #2f4630 0 70%, transparent 72%),
+      radial-gradient(ellipse 12px 26px at 86% 100%, #3a5236 0 70%, transparent 72%),
+      radial-gradient(ellipse 8px 18px at 93% 100%, #2c422c 0 70%, transparent 72%),
+      radial-gradient(ellipse 6px 14px at 46% 100%, #4a6244 0 70%, transparent 72%);
+    }
+    .phone[data-sky="night"] .trees, .phone[data-sky="late"] .trees { opacity: .7; }
+    .sun, .moon { position: absolute; border-radius: 50%; }
+    .sun { top: 14%; right: 14%; width: 36px; height: 36px; background: #ffe9a6; box-shadow: 0 0 0 8px rgba(255,230,150,.35), 0 0 22px #ffe7a8; }
+    .moon { top: 12%; right: 16%; width: 28px; height: 28px; background: #f4f0e4; box-shadow: 0 0 14px rgba(244,240,228,.85); display: none; }
+    .phone[data-sky="dusk"] .sun, .phone[data-sky="night"] .sun, .phone[data-sky="late"] .sun { display: none; }
+    .phone[data-sky="night"] .moon, .phone[data-sky="late"] .moon { display: block; }
+    .stars { position: absolute; inset: 0; display: none; background-image: radial-gradient(#fff 1.1px, transparent 1.5px), radial-gradient(#fff 0.8px, transparent 1.2px); background-size: 28px 22px, 40px 36px; background-position: 0 0, 12px 10px; }
+    .phone[data-sky="night"] .stars, .phone[data-sky="late"] .stars { display: block; opacity: .85; }
+    .smoke { position: absolute; left: 22%; bottom: 0; width: 10px; height: 0; display: none; border-radius: 10px; }
+    .phone[data-fire="small"] .smoke, .phone[data-fire="full"] .smoke, .phone[data-fire="blaze"] .smoke { display: block; height: 48px; background: linear-gradient(rgba(255,255,255,.45), transparent); filter: blur(3px); animation: smoke 3s ease-in-out infinite; }
+    .phone[data-fire="full"] .smoke { height: 64px; }
+    .phone[data-fire="blaze"] .smoke { height: 78px; }
+    .thread {
+      z-index: 2;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
-      background: var(--cream);
-      border-radius: 28px;
-      box-shadow: 0 16px 40px rgba(92, 83, 72, 0.16);
-      transition: background 2.4s ease;
+      justify-content: flex-end;
+      padding: 10px 14px 64px;
+      background: linear-gradient(180deg, rgba(255,252,244,.28), rgba(255,252,244,.08) 18%), linear-gradient(#c5d7a6, #8eae72 46%, #6f9354);
     }
-    .open-splash {
+    .phone[data-sky="afternoon"] .thread { background: linear-gradient(180deg, rgba(255,236,210,.3), transparent 20%), linear-gradient(#e4c98a, #c4a15c 50%, #8f9a58); }
+    .phone[data-sky="dusk"] .thread { background: linear-gradient(180deg, rgba(255,220,180,.22), transparent 18%), linear-gradient(#e0a06a, #c47a48 48%, #8f5a3c); }
+    .phone[data-sky="night"] .thread, .phone[data-sky="late"] .thread { background: linear-gradient(180deg, rgba(20,28,42,.12), rgba(12,16,26,.28)), linear-gradient(#2a384c, #1a2434 55%, #141c28); }
+    .phone > .floor { position: relative; z-index: 4; overflow: hidden; }
+    .soil { position: absolute; inset: 0; background:
+      radial-gradient(ellipse 7px 4px at 10% 58%, #f3ece2 0 32%, #a3988c 58%, #6e655c 78%, transparent 80%),
+      radial-gradient(ellipse 5px 3px at 18% 74%, #efe6da 0 30%, #8d847a 60%, transparent 80%),
+      radial-gradient(ellipse 6px 3.5px at 88% 52%, #f4eee6 0 30%, #9a9186 56%, #645c54 78%, transparent 80%),
+      linear-gradient(180deg, #c6d9a8 0%, #8fb56c 55%, #6d934c 100%);
+    }
+    .phone[data-ground="snow"] .soil { background:
+      radial-gradient(ellipse 6px 3px at 14% 64%, #ffffff 0 30%, #d5dee6 70%, transparent 80%),
+      linear-gradient(180deg, #f7fafc, #d5dee6);
+    }
+    .phone[data-sky="dusk"] .soil { background:
+      radial-gradient(ellipse 7px 4px at 12% 70%, #f6efe2 0 32%, #b08968 60%, transparent 80%),
+      linear-gradient(180deg, #e7b07a, #c48458 58%, #a86b44);
+    }
+    .phone[data-sky="night"] .soil, .phone[data-sky="late"] .soil { background:
+      radial-gradient(ellipse 6px 3px at 14% 68%, #8a93a0 0 30%, #3a4454 70%, transparent 80%),
+      linear-gradient(180deg, #2c3a4e, #1c2836);
+    }
+    .phone[data-ground="gold"] .soil { background:
+      radial-gradient(ellipse 7px 4px at 12% 60%, #f6efe2 0 32%, #b7a48a 60%, transparent 80%),
+      radial-gradient(ellipse 5px 3px at 86% 68%, #f3eadc 0 30%, #a89070 62%, transparent 80%),
+      linear-gradient(180deg, #e6cb86, #c4a15c 50%, #8f9a58);
+    }
+    .tent, .blaze { display: none; }
+    .phone[data-fire="small"] .tent, .phone[data-fire="full"] .tent, .phone[data-fire="blaze"] .tent,
+    .phone[data-fire="small"] .blaze, .phone[data-fire="full"] .blaze, .phone[data-fire="blaze"] .blaze,
+    .phone[data-fire="brazier"] .blaze { display: block; }
+    .phone[data-fire="small"] .blaze, .phone[data-fire="brazier"] .blaze { transform: scale(0.55); transform-origin: left bottom; }
+    .phone[data-fire="blaze"] .blaze { transform: scale(1.2); transform-origin: left bottom; }
+    .logs { position: absolute; left: 5%; bottom: 28%; width: 32px; height: 8px; background: #6b442c; border-radius: 4px; box-shadow: 10px -7px 0 #8a5a38, 3px -13px 0 #5c3a24, 18px -4px 0 #7a4e32; transform: rotate(-8deg); z-index: 1; }
+    .tent { position: absolute; right: 3%; bottom: 12%; width: 62px; height: 48px; z-index: 1; }
+    .tent i {
+      position: absolute; left: 6px; bottom: 0; width: 0; height: 0;
+      border-left: 25px solid transparent; border-right: 25px solid transparent; border-bottom: 46px solid #d4653c;
+      filter: drop-shadow(0 2px 0 #8a3e28);
+    }
+    .tent i::after {
+      content: ""; position: absolute; left: -8px; top: 22px;
+      border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 22px solid #4a2a1c;
+    }
+    .tent b {
+      position: absolute; left: 28px; bottom: 44px; width: 2px; height: 10px; background: #5c3a24;
+    }
+    .tent b::after { content: ""; position: absolute; top: -6px; left: -5px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 7px solid #f2d48a; }
+    .blaze { position: absolute; left: 8%; bottom: 22%; width: 28px; height: 34px; z-index: 2; }
+    .blaze i { position: absolute; bottom: 6px; width: 12px; height: 26px; border-radius: 12px 12px 4px 4px; background: linear-gradient(#fff4c4, #f08a3c 55%, #c44820); animation: flicker 0.8s ease-in-out infinite; }
+    .blaze i:last-child { left: 10px; height: 18px; animation-delay: -.3s; }
+    .blaze::before { content: ""; position: absolute; left: -4px; bottom: 0; width: 34px; height: 8px; border-radius: 8px; background: #5c4638; box-shadow: inset 0 2px 0 #3a2c24; }
+    .otter { position: absolute; left: 50%; bottom: 0; height: 92%; transform: translateX(-50%); z-index: 3; }
+    .otter img { height: 100%; width: auto; aspect-ratio: 1; border-radius: 50%; object-fit: cover; object-position: center 32%; background: #f6d7c4; display: block; box-shadow: 0 6px 0 rgba(60,48,32,.12); }
+    .phone > .motes { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+    .mote { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #f2d48a; animation: mote-up 1.5s ease forwards; }
+    .row.user.scatter { animation: lift .7s ease forwards; }
+    .row.ai { animation: from-stage 0.75s ease-out; }
+    @keyframes flicker { 50% { transform: scaleX(.86) scaleY(1.08); } }
+    @keyframes smoke { 50% { transform: translateY(-8px) scaleX(1.4); opacity: .7; } }
+    @keyframes lift { to { opacity: 0; transform: translateY(-20px); } }
+    @keyframes mote-up { to { transform: translateY(-340px); opacity: 0; } }
+    @keyframes from-stage { from { opacity: 0; transform: translateY(72px); } to { opacity: 1; transform: none; } }
+    .phone > .open-splash {
       position: absolute;
       inset: 0;
-      z-index: 6;
-      overflow: hidden;
-      background: #F7F1E6;
+      z-index: 8;
       cursor: pointer;
     }
     .open-splash.leave {
@@ -131,28 +253,22 @@
       transition: opacity 0.45s ease;
       pointer-events: none;
     }
-    .open-art {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 40%;
+    .open-splash .splash-art {
       opacity: 0;
       transform: translateY(30px) scale(0.95);
     }
-    .open-splash.play .open-art {
+    .open-splash.play .splash-art {
       animation: splash-in 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards,
         splash-breathe 2.4s ease-in-out 1.8s infinite;
     }
-    .open-fx {
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
+    .open-splash .splash-caption {
+      font-size: 14px;
+      opacity: 0;
+      animation: splash-caption-in 1.2s ease .4s both;
+    }
+    @keyframes splash-caption-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
     }
     @keyframes splash-in {
       to { opacity: 1; transform: translateY(0) scale(1); }
@@ -162,22 +278,10 @@
       50% { transform: translateY(-2px) scale(1.012); }
     }
     @media (prefers-reduced-motion: reduce) {
-      .open-art { animation: none; opacity: 1; transform: none; }
+      .open-splash .splash-art { animation: none; opacity: 1; transform: none; }
     }
     .ai .bubble, footer, textarea { transition: background 2.4s ease, color 2.4s ease; }
-    .phone > header {
-      position: absolute;
-      top: 12px;
-      left: 0;
-      right: 0;
-      z-index: 2;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 48px;
-      padding: 0 16px;
-      background: transparent;
-    }
+    .phone > header { background: transparent; }
     .pills { display: flex; align-items: center; gap: 6px; }
     .weather-pill { display: inline-flex; align-items: center; color: var(--muted); transition: color 2.4s ease; }
     .weather-pill[hidden] { display: none; }
@@ -234,20 +338,15 @@
     body.dusk .time-pill { background: rgba(232, 168, 124, 0.35); }
     body.night .time-pill { background: rgba(138, 154, 123, 0.28); }
 
-    main { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px 16px; }
+    main { min-height: 0; overflow-y: auto; }
     .row {
       display: flex;
       align-items: flex-start;
       gap: 8px;
       margin-top: 8px;
-      animation: rise 0.7s ease;
     }
     .row.switch { margin-top: 24px; }
     .row.user { justify-content: flex-end; }
-    @keyframes rise {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
     .bubble {
       max-width: 75%;
       padding: 10px 14px;
@@ -298,12 +397,20 @@
       background: var(--apricot);
     }
 
-    footer {
+    .phone > footer {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 15%;
+      z-index: 6;
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 14px calc(14px + env(safe-area-inset-bottom));
-      background: transparent;
+      gap: 8px;
+      padding: 6px 8px 6px 14px;
+      border-radius: 999px;
+      background: rgba(253, 246, 236, 0.58);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
     textarea {
       flex: 1;
@@ -313,9 +420,9 @@
       padding: 10px 16px;
       font: inherit;
       font-weight: 400;
-      min-height: 40px;
-      max-height: 110px;
-      background: var(--soft);
+      min-height: 36px;
+      max-height: 80px;
+      background: transparent;
       color: var(--ink);
       outline: none;
     }
@@ -333,6 +440,78 @@
     }
     .send svg { display: block; }
     .send:disabled { opacity: 0.45; }
+
+    .phone > .scene { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
+    .scene .skyband { position: absolute; left: 0; right: 0; top: 0; height: 46%; }
+    .field { position: absolute; left: 0; right: 0; top: 40%; bottom: 0; background: linear-gradient(#d5e4b4, #8fb56c 48%, #6d934c); }
+    .phone[data-sky="afternoon"] .field { background: linear-gradient(#e6cb86, #c4a15c 52%, #8f9a58); }
+    .phone[data-sky="dusk"] .field { background: linear-gradient(#f0b07a, #c47a48 55%, #8f5a3c); }
+    .phone[data-sky="night"] .field, .phone[data-sky="late"] .field { background: linear-gradient(#243044, #1a2434 58%, #141c28); }
+    .stage-ground { position: absolute; left: 0; right: 0; bottom: 0; height: 42%; }
+    .stage-ground .otter { left: 50%; bottom: 78px; height: 300px; transform: translateX(-50%); }
+    .stage-ground .otter img {
+      height: 100%; width: auto; aspect-ratio: auto; border-radius: 0;
+      object-fit: contain; object-position: center bottom; background: transparent;
+      box-shadow: none;
+    }
+    .otter .shadow { position: absolute; left: 50%; bottom: 0; width: 62%; height: 16px; transform: translateX(-50%); background: radial-gradient(ellipse, rgba(40,28,16,.4), transparent 70%); z-index: 0; }
+    .pose { position: relative; z-index: 1; height: 100%; transform-origin: 50% 92%; will-change: transform; }
+    .chest { position: relative; height: 100%; transform-origin: 50% 82%; perspective: 900px; will-change: transform; }
+    .chest > svg.open-sheet {
+      height: 100%; width: auto; display: block; overflow: hidden;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 56%, #000 64%);
+      mask-image: linear-gradient(to bottom, transparent 56%, #000 64%);
+    }
+    .head {
+      position: absolute; left: 0; top: 0; width: 100%; height: 66%;
+      transform-origin: 50% 88%; z-index: 2; will-change: transform;
+      -webkit-mask-image: linear-gradient(to bottom, #000 84%, transparent 100%);
+      mask-image: linear-gradient(to bottom, #000 84%, transparent 100%);
+    }
+    .head svg { width: 100%; height: 100%; display: block; overflow: hidden; }
+    .head .shut-sheet { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+    .lid { position: absolute; width: 16%; height: 13%; top: 64%; border-radius: 50%; background: #e6c7a6; transform: scaleY(0); transform-origin: 50% 60%; will-change: transform; pointer-events: none; z-index: 2; }
+    .lid.l { left: 24%; }
+    .lid.r { left: 50%; }
+    .shut { opacity: 0; will-change: opacity; }
+    .ink { position: absolute; left: 38%; top: 67%; width: 22%; height: 8%; z-index: 4; pointer-events: none; opacity: 0; overflow: visible; }
+    .ink path { fill: none; stroke: #2c1d12; stroke-width: 4; stroke-linecap: round; }
+    .phone[data-fire="small"] .stage-ground::after, .phone[data-fire="full"] .stage-ground::after, .phone[data-fire="blaze"] .stage-ground::after {
+      content: ""; position: absolute; left: 0; bottom: 14%; width: 120px; height: 70px; pointer-events: none;
+      background: radial-gradient(circle, rgba(255,168,64,.28), transparent 72%);
+    }
+    .fall { position: absolute; inset: 0; pointer-events: none; z-index: 3; opacity: 0; }
+    .phone[data-wet="rain"] .fall { opacity: .7; background-image: repeating-linear-gradient(104deg, transparent 0 12px, rgba(230,240,255,.45) 12px 13px); animation: rain .7s linear infinite; }
+    .phone[data-wet="snow"] .fall { opacity: .85; background-image: radial-gradient(circle, #fff 1.1px, transparent 1.6px); background-size: 26px 32px; animation: snow 7s linear infinite; }
+    @keyframes rain { to { background-position: 18px 28px; } }
+    @keyframes snow { to { background-position: 12px 40px; } }
+    .glyphs { position: absolute; right: 6%; top: -2%; z-index: 5; pointer-events: none; }
+    .glyphs span { opacity: 0; visibility: hidden; padding: 4px 10px; border-radius: 14px; background: rgba(255,252,246,.94); color: #5c5348; font-size: 15px; box-shadow: 0 6px 14px rgba(60,40,20,.12); will-change: transform; }
+    .phone > .chrome { position: absolute; top: 0; left: 0; right: 0; z-index: 6; display: flex; align-items: center; justify-content: space-between; padding: 14px 14px 0; background: transparent !important; }
+    .chrome .back, .chrome .sound { width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgba(255,252,246,.28); color: #3d342c; display: grid; place-items: center; }
+    .phone[data-sky="night"] .chrome .back, .phone[data-sky="night"] .chrome .sound, .phone[data-sky="late"] .chrome .back, .phone[data-sky="late"] .chrome .sound { color: #f7f1e6; background: rgba(255,255,255,.12); }
+    .phone > .note {
+      position: absolute; z-index: 5; left: 28px; right: 28px; top: 68px;
+      min-height: 92px; padding: 22px 18px 36px; color: #3d342c;
+      background: #f6f1e6;
+      clip-path: polygon(0 10px, 8px 4px, 18px 12px, 32px 2px, 48px 10px, 64px 0, 82px 8px, 100px 2px, 120px 11px, 148px 3px, 176px 10px, 100% 6px, 100% calc(100% - 8px), calc(100% - 14px) calc(100% - 2px), calc(100% - 36px) calc(100% - 12px), calc(100% - 58px) 100%, 70% calc(100% - 6px), 48% calc(100% - 1px), 24% calc(100% - 10px), 8px calc(100% - 3px), 0 calc(100% - 12px));
+      box-shadow: 0 12px 28px rgba(50,36,20,.16);
+      transform: rotate(-1.2deg);
+      touch-action: none;
+    }
+    .note { animation: note-in .45s ease; }
+    .note.away { transform: translateY(130%) rotate(-1.2deg); opacity: 0; pointer-events: none; transition: transform .4s ease, opacity .4s ease; animation: none; }
+    @keyframes note-in { from { opacity: 0; transform: translateY(-42px) rotate(-1.2deg); } to { opacity: 1; transform: rotate(-1.2deg); } }
+    .note p { margin: 0; font-size: 16px; line-height: 1.65; min-height: 1.65em; }
+    .note .save { position: absolute; right: 14px; bottom: 12px; border: 0; border-radius: 8px; padding: 3px 8px; background: #7f9a72; color: #fffdf8; font-size: 12px; }
+    .sparks { position: absolute; inset: 0; pointer-events: none; }
+    .sparks i { position: absolute; width: 8px; height: 8px; background: #f2d48a; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: twinkle 1.8s ease-in-out infinite; }
+    .sparks i:nth-child(1) { top: 8px; left: 10px; }
+    .sparks i:nth-child(2) { top: 4px; right: 36px; animation-delay: .4s; }
+    .sparks i:nth-child(3) { bottom: 16px; left: 18px; animation-delay: .8s; }
+    @keyframes twinkle { 50% { opacity: .35; transform: scale(.7); } }
+    .phone > .composer { position: absolute; z-index: 7; left: 16px; right: 16px; bottom: 16px; display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 14px; border-radius: 18px; background: rgba(246,241,230,.92); }
+    #tlabel { display: none; }
   </style>
 </head>
 <body class="dusk">
@@ -345,30 +524,98 @@
   </div>
   <canvas id="fx"></canvas>
   <div class="stage">
-    <div class="phone">
-      <header>
-        <div class="pills">
-          <div class="weather-pill" id="wpill" hidden></div>
-          <div class="time-pill" id="tlabel">傍晚了</div>
-        </div>
-      </header>
-      <div class="sheet">
-        <main id="list"></main>
-        <footer>
-          <textarea id="input" rows="1" placeholder="嗯，我在听"></textarea>
-          <button class="send" id="send" aria-label="发送">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFDF8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-          </button>
-        </footer>
+    <div class="phone" id="valley" data-sky="noon" data-ground="grass" data-camp="0" data-fire="none" data-pose="idle" data-wet="">
+      <div class="scene">
+        <section class="skyband">
+          <div class="ridge far"></div>
+          <div class="ridge near"></div>
+          <div class="trees"></div>
+          <div class="sun"></div>
+          <div class="moon"></div>
+          <div class="stars"></div>
+          <div class="smoke"></div>
+        </section>
+        <div class="field"></div>
+        <div class="fall"></div>
+        <section class="stage-ground">
+          <div class="soil"></div>
+          <div class="logs"></div>
+          <div class="tent"><i></i><b></b></div>
+          <div class="blaze"><i></i><i></i></div>
+          <div class="otter">
+            <i class="shadow"></i>
+            <div class="pose">
+              <div class="chest">
+                <svg class="open-sheet" viewBox="0 0 765 927" preserveAspectRatio="xMidYMax meet" role="img" aria-label="团团">
+                  <image href="/art/tuantuan/tuantuan-wizard-ref.png?v=stand2" width="765" height="927" />
+                </svg>
+                <div class="head">
+                  <svg viewBox="0 0 765 612" preserveAspectRatio="xMidYMin slice">
+                    <image href="/art/tuantuan/tuantuan-wizard-ref.png?v=stand2" width="765" height="927" />
+                  </svg>
+                  <i class="lid l"></i>
+                  <i class="lid r"></i>
+                  <svg class="shut-sheet" viewBox="0 0 765 612" preserveAspectRatio="xMidYMin slice">
+                    <image class="shut" href="/art/tuantuan/tuantuan-wizard-shut.png?v=shut1" width="765" height="927" />
+                  </svg>
+                </div>
+                <svg class="ink" viewBox="0 0 100 40" aria-hidden="true">
+                  <path class="a" d="M8 12 C 30 6, 54 16, 92 8" />
+                  <path class="b" d="M10 28 C 34 22, 58 32, 90 24" />
+                </svg>
+                <div class="glyphs" aria-hidden="true"><span class="think">……</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
-      <div class="open-splash" id="openSplash" hidden>
-        <img class="open-art" id="openArt" alt="团团" />
-        <canvas class="open-fx" id="openFx"></canvas>
+      <header class="chrome">
+        <button class="back" id="back" type="button" aria-label="返回">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <button class="sound" id="sound" type="button" aria-label="声音" aria-pressed="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg>
+        </button>
+      </header>
+      <div id="tlabel" hidden></div>
+      <div class="weather-pill" id="wpill" hidden></div>
+      <article class="note away" id="note">
+        <div class="sparks"><i></i><i></i><i></i></div>
+        <p id="noteText"></p>
+        <button class="save" id="save" type="button">保存</button>
+      </article>
+      <div class="composer" id="composer">
+        <textarea id="input" rows="1" placeholder="嗯，我在听"></textarea>
+        <button class="send" id="send" type="button" aria-label="发送">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFDF8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        </button>
+      </div>
+      <div class="motes" id="motes"></div>
+      <div class="open-splash splash-stage" id="openSplash" hidden>
+        <img class="splash-art" id="openArt" alt="团团" />
+        <div class="splash-fill"></div>
+        <div class="splash-hi"></div>
+        <div class="splash-key"></div>
+        <div class="splash-rim"></div>
+        <div class="splash-shadow"></div>
+        <div class="splash-lift"></div>
+        <div class="splash-body"></div>
+        <div class="splash-veil"></div>
+        <div class="splash-bloom"></div>
+        <div class="splash-period-fx"></div>
+        <div class="splash-weather-fx"></div>
+        <div class="splash-caption" id="openCaption"></div>
       </div>
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="/js/splashLight.js"></script>
+  <script src="/js/splashRain.js"></script>
   <script>
-    const list = document.getElementById("list");
+    window.addEventListener("error", (e) => { window.__boot = (e.message || "") + " @" + e.lineno + ":" + e.colno; });
+    const note = document.getElementById("note");
+    const noteText = document.getElementById("noteText");
+    const valley = document.getElementById("valley");
     const input = document.getElementById("input");
     const send = document.getElementById("send");
     const canvas = document.getElementById("fx");
@@ -413,6 +660,45 @@
       return "night";
     }
 
+    function valleyPeriod(minute) {
+      const m = minute == null ? clockMinute() : minute;
+      const h = Math.floor(m / 60) % 24;
+      if (h >= 5 && h < 8) return "dawn";
+      if (h >= 8 && h < 11) return "morning";
+      if (h >= 11 && h < 14) return "noon";
+      if (h >= 14 && h < 17) return "afternoon";
+      if (h >= 17 && h < 19) return "dusk";
+      if (h >= 19 && h < 23) return "night";
+      return "late";
+    }
+
+    function paintValley() {
+      const period = valleyPeriod();
+      const sky = weather.sky || "clear";
+      const rain = sky === "rain" || sky === "storm";
+      const snow = sky === "snow";
+      const evening = period === "dusk" || period === "night" || period === "late";
+      let fire = evening ? (period === "late" ? "blaze" : period === "night" ? "full" : "small") : "none";
+      if (snow) fire = period === "late" ? "blaze" : "full";
+      if (rain && !evening) fire = "brazier";
+      const ground = snow ? "snow" : (period === "afternoon" ? "gold" : "grass");
+      const skyName = { dawn: "dawn", morning: "morning", noon: "noon", afternoon: "afternoon", dusk: "dusk", night: "night", late: "late" }[period];
+      valley.dataset.sky = skyName;
+      valley.dataset.ground = ground;
+      valley.dataset.fire = fire;
+      valley.dataset.wet = rain ? "rain" : snow ? "snow" : "";
+      valley.dataset.camp = (fire === "small" || fire === "full" || fire === "blaze") ? "1" : "0";
+      const names = { dawn: "清晨", morning: "上午", noon: "午后", afternoon: "下午", dusk: "黄昏", night: "夜晚", late: "深夜" };
+      const skyNameText = { clear: "晴", partly: "阴", cloudy: "阴", fog: "阴", rain: "雨", storm: "雨", snow: "雪" }[sky] || "晴";
+      const fallback = { dawn: 14, morning: 18, noon: 24, afternoon: 22, dusk: 17, night: 13, late: 9 };
+      let tempN = typeof weather.temperature === "number" ? weather.temperature : fallback[period];
+      if (typeof weather.temperature !== "number") {
+        if (snow) tempN -= 8;
+        else if (rain) tempN -= 3;
+      }
+      tlabel.textContent = names[period] + " · " + skyNameText + " · " + Math.round(tempN) + "°";
+    }
+
     function tuantuan() {
       const el = document.createElement("img");
       el.className = "tuantuan";
@@ -421,19 +707,220 @@
       return el;
     }
 
-    function add(role, opts) {
-      const row = document.createElement("div");
-      row.className = "row " + role + (lastRole && lastRole !== role ? " switch" : "");
-      lastRole = role;
-      const bubble = document.createElement("div");
-      bubble.className = "bubble" + (opts && opts.wait ? " typing" : "");
-      if (opts && opts.wait) bubble.innerHTML = "<i></i><i></i><i></i>";
-      else bubble.textContent = (opts && opts.text) || "";
-      if (role === "ai") row.appendChild(tuantuan());
-      row.appendChild(bubble);
-      list.appendChild(row);
-      list.scrollTop = list.scrollHeight;
-      return bubble;
+    function showNote() {
+      note.classList.remove("away");
+      note.style.animation = "none";
+      void note.offsetWidth;
+      note.style.animation = "";
+    }
+
+    let poseBusy = false;
+    let poseTl = null;
+    let blinkTl = null;
+    let blinkCall = null;
+
+    function breathSpan() {
+      return 3.6 + Math.random() * 1.6;
+    }
+
+    function blinkGap() {
+      return 2.4 + Math.random() * 3.6;
+    }
+
+    function killPose() {
+      if (poseTl) {
+        poseTl.kill();
+        poseTl = null;
+      }
+      gsap.killTweensOf(".pose");
+      gsap.killTweensOf(".head");
+      gsap.killTweensOf(".think");
+      gsap.killTweensOf(".ink path");
+      gsap.set(".think", { autoAlpha: 0, y: 0 });
+      gsap.set(".ink", { autoAlpha: 0 });
+    }
+
+    function pauseBlink() {
+      if (blinkCall) {
+        blinkCall.kill();
+        blinkCall = null;
+      }
+      if (blinkTl) {
+        blinkTl.kill();
+        blinkTl = null;
+      }
+      if (typeof gsap !== "undefined") {
+        gsap.set(".shut", { opacity: 0 });
+        gsap.set(".lid", { scaleY: 0 });
+      }
+    }
+
+    function playBlink() {
+      blinkCall = null;
+      if (reduceMotion || document.hidden || valley.dataset.pose === "agree") {
+        scheduleBlink();
+        return;
+      }
+      blinkTl = gsap.timeline({ onComplete: scheduleBlink });
+      blinkTl.to(".shut", { opacity: 1, duration: 0.08, ease: "power2.in" }, 0)
+        .to(".lid", { scaleY: 1, duration: 0.08, ease: "power2.in" }, 0)
+        .to(".shut", { opacity: 1, duration: 0.07 })
+        .to(".shut", { opacity: 0, duration: 0.16, ease: "power2.out" })
+        .to(".lid", { scaleY: 0, duration: 0.16, ease: "power2.out" }, "<");
+    }
+
+    function scheduleBlink() {
+      if (reduceMotion || typeof gsap === "undefined") return;
+      if (blinkCall) blinkCall.kill();
+      blinkCall = gsap.delayedCall(blinkGap(), playBlink);
+    }
+
+    function resumeBlink() {
+      if (reduceMotion || typeof gsap === "undefined") return;
+      if ((blinkTl && blinkTl.isActive()) || blinkCall) return;
+      scheduleBlink();
+    }
+
+    function playListening() {
+      killPose();
+      resumeBlink();
+      poseTl = gsap.timeline();
+      poseTl.to(".pose", { rotation: 0, x: 0, y: 0, scale: 1, duration: 0.35, ease: "power2.out" }, 0);
+      poseTl.to(".head", { rotationZ: -10, rotationX: 0, duration: 0.4, ease: "power2.out" }, 0);
+      return poseTl;
+    }
+
+    function playThinking() {
+      killPose();
+      resumeBlink();
+      poseTl = gsap.timeline();
+      poseTl.to(".pose", { rotation: 0, x: 0, y: 0, scale: 1, duration: 0.35, ease: "power2.out" }, 0);
+      poseTl.to(".head", { rotationZ: 7, rotationX: 0, duration: 0.4, ease: "power2.out" }, 0);
+      poseTl.to(".think", { autoAlpha: 1, duration: 0.3, ease: "power2.out" }, 0);
+      gsap.to(".think", { y: -5, duration: 0.7, ease: "sine.inOut", yoyo: true, repeat: -1 });
+      return poseTl;
+    }
+
+    function playWrite() {
+      killPose();
+      resumeBlink();
+      const strokes = [...document.querySelectorAll(".ink path")];
+      strokes.forEach((path) => {
+        const len = path.getTotalLength();
+        gsap.set(path, { strokeDasharray: len, strokeDashoffset: len });
+      });
+      poseTl = gsap.timeline();
+      poseTl.to(".pose", { rotation: 0, x: 0, y: 0, scale: 1, duration: 0.3, ease: "power2.out" }, 0);
+      poseTl.to(".head", { rotationX: 14, rotationZ: 0, duration: 0.35, ease: "power2.out" }, 0);
+      poseTl.set(".ink", { autoAlpha: 1 }, 0.22);
+      poseTl.to(strokes[0], { strokeDashoffset: 0, duration: 0.4, ease: "none" }, 0.26);
+      poseTl.to(strokes[1], { strokeDashoffset: 0, duration: 0.4, ease: "none" }, 0.72);
+      poseTl.to(".head", { rotationX: 0, duration: 0.4, ease: "power2.inOut" }, 1.2);
+      poseTl.set(".ink", { autoAlpha: 0 });
+      return poseTl;
+    }
+
+    function playLook() {
+      killPose();
+      resumeBlink();
+      poseTl = gsap.timeline();
+      poseTl.to(".pose", { rotation: 0, x: 0, y: 0, scale: 1, duration: 0.35, ease: "power2.out" }, 0);
+      poseTl.to(".head", { rotationZ: 0, rotationX: -8, duration: 0.4, ease: "power2.out" }, 0);
+      return poseTl;
+    }
+
+    function playAgree() {
+      killPose();
+      pauseBlink();
+      poseTl = gsap.timeline({ onComplete: resumeBlink });
+      poseTl.to(".pose", { rotation: 0, x: 0, y: 0, scale: 1, duration: 0.2, ease: "power2.out" }, 0);
+      poseTl.to(".head", { rotationX: 12, rotationZ: 0, duration: 0.14, ease: "power2.out" }, 0)
+        .to(".shut", { opacity: 1, duration: 0.1, ease: "power2.out" }, 0)
+        .to(".lid", { scaleY: 1, duration: 0.1, ease: "power2.out" }, 0)
+        .to(".head", { rotationX: 0, duration: 0.14, ease: "power2.inOut" })
+        .to(".head", { rotationX: 12, duration: 0.14, ease: "power2.out" })
+        .to(".head", { rotationX: 0, duration: 0.16, ease: "power2.inOut" })
+        .to(".shut", { opacity: 0, duration: 0.16, ease: "power2.out" }, ">-0.12")
+        .to(".lid", { scaleY: 0, duration: 0.16, ease: "power2.out" }, "<");
+      return poseTl;
+    }
+
+    function playComfort() {
+      killPose();
+      resumeBlink();
+      poseTl = gsap.timeline();
+      poseTl.to(".head", { rotationX: 0, rotationZ: 0, duration: 0.35, ease: "power2.out" }, 0);
+      poseTl.to(".pose", { scale: 1.06, y: -12, x: 0, rotation: 0, duration: 0.45, ease: "power2.out" }, 0)
+        .to(".pose", { scale: 1, y: 0, duration: 0.45, ease: "power2.out" }, "+=2");
+      return poseTl;
+    }
+
+    function playIdle() {
+      killPose();
+      resumeBlink();
+      poseTl = gsap.timeline();
+      poseTl.to(".pose", { rotation: 0, x: 0, y: 0, scale: 1, duration: 0.4, ease: "power2.out" }, 0);
+      poseTl.to(".head", { rotationX: 0, rotationZ: 0, duration: 0.4, ease: "power2.out" }, 0);
+      return poseTl;
+    }
+
+    const posePlays = {
+      listen: playListening,
+      think: playThinking,
+      write: playWrite,
+      look: playLook,
+      agree: playAgree,
+      comfort: playComfort,
+      idle: playIdle,
+    };
+
+    function setPose(name) {
+      valley.dataset.pose = name;
+      if (typeof gsap === "undefined") return Promise.resolve();
+      return posePlays[name] ? posePlays[name]() : playIdle();
+    }
+
+    if (typeof gsap !== "undefined") {
+      gsap.set(".pose", { transformOrigin: "50% 92%" });
+      gsap.set(".chest", { transformOrigin: "50% 82%", scaleY: 1 });
+      gsap.set(".head", { transformOrigin: "50% 88%", rotationX: 0, rotationZ: 0 });
+      gsap.set(".lid", { transformOrigin: "50% 60%", scaleY: 0 });
+      gsap.set(".shut", { opacity: 0 });
+      gsap.set(".ink", { autoAlpha: 0 });
+      if (!reduceMotion) {
+        gsap.to(".chest", {
+          scaleY: 1.018,
+          duration: breathSpan(),
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+          onRepeat() { this.duration(breathSpan()); },
+        });
+        document.addEventListener("visibilitychange", () => {
+          if (document.hidden) gsap.ticker.sleep();
+          else gsap.ticker.wake();
+        });
+      }
+    }
+
+    function releaseWords() {
+      const layer = document.getElementById("motes");
+      const phone = valley.getBoundingClientRect();
+      const box = document.getElementById("composer").getBoundingClientRect();
+      for (let i = 0; i < 8; i++) {
+        const mote = document.createElement("i");
+        mote.className = "mote";
+        mote.style.left = (box.left - phone.left + Math.random() * box.width) + "px";
+        mote.style.top = (box.top - phone.top) + "px";
+        layer.appendChild(mote);
+        setTimeout(() => mote.remove(), 1600);
+      }
+    }
+
+    function moodFor(presence) {
+      if (presence === "agree" || presence === "nod") return "agree";
+      if (presence === "comfort" || presence === "hold" || presence === "warmth") return "comfort";
+      return "look";
     }
 
     function sleep(ms) {
@@ -441,19 +928,19 @@
     }
 
     async function typewrite(el, text) {
-      el.classList.remove("typing");
       el.textContent = "";
+      showNote();
       for (const ch of text) {
         el.textContent += ch;
-        list.scrollTop = list.scrollHeight;
         await sleep(30);
       }
     }
 
     async function speak(text, delay) {
-      const bubble = add("ai", { wait: true });
+      setPose("look");
       if (delay) await sleep(delay);
-      await typewrite(bubble, text);
+      await typewrite(noteText, text);
+      if (!poseBusy && !input.value.trim()) setPose("idle");
     }
 
     const PLATE_OF = { clear: "clear", partly: "clear", cloudy: "cloudy", fog: "cloudy", rain: "rain", storm: "rain", snow: "snow" };
@@ -578,6 +1065,7 @@
       document.body.style.setProperty("--phone-glow", rgba(glow));
       fx.minute = minute;
       fx.phase = phase;
+      paintValley();
     }
 
     const ctx = canvas.getContext("2d");
@@ -979,10 +1467,7 @@
     }
 
     function renderWeatherPill() {
-      wpill.innerHTML = weatherIcon();
-      wpill.title = SKY_NAME[weather.sky] || "晴";
-      wpill.setAttribute("aria-label", wpill.title);
-      wpill.hidden = false;
+      wpill.hidden = true;
     }
 
     async function loadWeather() {
@@ -1023,26 +1508,38 @@
       sending = true;
       input.value = "";
       resize();
-      add("user", { text: message });
+      releaseWords();
+      poseBusy = true;
+      setPose("think");
       send.disabled = true;
-      const bubble = add("ai", { wait: true });
       try {
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_id: sessionId, message }),
+          body: JSON.stringify({ session_id: sessionId, message, period: valleyPeriod() }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || "请求失败");
         sessionId = data.session_id;
-        await typewrite(bubble, data.reply);
+        await setPose("write");
+        setPose("look");
+        await typewrite(noteText, data.reply);
+        await playPresence(data.presence);
       } catch (err) {
-        await typewrite(bubble, err.message);
+        setPose("look");
+        await typewrite(noteText, err.message);
       } finally {
+        poseBusy = false;
         sending = false;
         send.disabled = false;
-        input.focus();
+        if (!input.value.trim()) setPose("look");
       }
+    }
+
+    async function playPresence(presence) {
+      const pose = moodFor(presence);
+      if (pose === "agree" || pose === "comfort") await setPose(pose);
+      setPose("look");
     }
 
     function resize() {
@@ -1051,7 +1548,13 @@
     }
 
     send.addEventListener("click", () => chat());
-    input.addEventListener("input", resize);
+    input.addEventListener("input", () => {
+      resize();
+      if (poseBusy) return;
+      setPose(input.value.trim() ? "listen" : "idle");
+    });
+    input.addEventListener("focus", () => { if (!poseBusy) setPose("listen"); });
+    input.addEventListener("blur", () => { if (!poseBusy && !input.value.trim()) setPose("idle"); });
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -1059,155 +1562,91 @@
       }
     });
 
+    document.getElementById("back").addEventListener("click", () => history.back());
+    document.getElementById("sound").addEventListener("click", (e) => {
+      const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+      e.currentTarget.setAttribute("aria-pressed", on ? "true" : "false");
+      e.currentTarget.style.opacity = on ? "1" : "0.45";
+    });
+    document.getElementById("save").addEventListener("click", (e) => {
+      e.stopPropagation();
+      const text = noteText.textContent.trim();
+      if (!text) return;
+      const all = JSON.parse(localStorage.getItem("vv_slips") || "[]");
+      all.unshift({ text, at: Date.now() });
+      localStorage.setItem("vv_slips", JSON.stringify(all.slice(0, 30)));
+      e.currentTarget.textContent = "已收下";
+      setTimeout(() => { e.currentTarget.textContent = "保存"; }, 900);
+    });
+
+    let dragY = 0;
+    note.addEventListener("pointerdown", (e) => {
+      if (e.target.closest(".save")) return;
+      dragY = e.clientY;
+      note.setPointerCapture(e.pointerId);
+    });
+    note.addEventListener("pointermove", (e) => {
+      if (!dragY) return;
+      const dy = Math.max(0, e.clientY - dragY);
+      note.style.transform = "translateY(" + dy + "px) rotate(-1.2deg)";
+    });
+    note.addEventListener("pointerup", (e) => {
+      if (!dragY) return;
+      const dy = e.clientY - dragY;
+      dragY = 0;
+      if (dy > 72) note.classList.add("away");
+      note.style.transform = "";
+    });
+
     const openSplash = document.getElementById("openSplash");
     const openArt = document.getElementById("openArt");
-    const openFx = document.getElementById("openFx");
-    const splashCtx = openFx.getContext("2d");
-    const SPLASH_FILE = {
-      sunny: "splash-01-sunny.jpg",
-      rain: "splash-02-rain.jpg",
-      snow: "splash-03-snow.jpg",
-      wind: "splash-04-wind.jpg",
-      cloudy: "splash-05-cloudy.jpg",
-      storm: "splash-06-storm.jpg",
-      fog: "splash-07-fog.jpg",
-      heat: "splash-08-heat.jpg",
-    };
     let splashStarted = false;
-    let splashLoop = 0;
-    let splashParts = [];
 
-    function splashKind() {
-      const hour = hourScene();
-      if (weather.sky === "storm" || (hour === "night" && weather.sky === "rain")) return "storm";
-      if (weather.sky === "snow") return "snow";
-      if (weather.sky === "rain") return "rain";
-      if (weather.sky === "fog") return "fog";
-      if (weather.windy) return "wind";
-      if (weather.sky === "cloudy") return "cloudy";
-      if (typeof weather.temperature === "number" && weather.temperature >= 32 && hour === "noon") return "heat";
-      return "sunny";
+    function splashPick() {
+      const h = Math.floor(clockMinute() / 60) % 24;
+      const forcedSky = query.get("sky");
+      return window.SplashLight.pickSplash(h, {
+        sky: forcedSky || weather.sky || "clear",
+        windy: !!weather.windy || query.get("wind") === "1",
+      });
     }
 
-    function makeParts(kind, w, h) {
-      const n = { fog: 7, rain: 80, storm: 96, snow: 46, wind: 16, cloudy: 14 }[kind] || 28;
-      return Array.from({ length: n }, () => ({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        s: kind === "snow" ? 1.8 + Math.random() * 2.4 : 1.2 + Math.random() * 2,
-        v: 0.6 + Math.random() * 1.1,
-        drift: (Math.random() - 0.5) * 0.8,
-        a: 0.35 + Math.random() * 0.55,
-        len: 16 + Math.random() * 18,
-      }));
-    }
-
-    function drawFx(ctx, w, h, kind, parts, tone) {
-      ctx.clearRect(0, 0, w, h);
-      const light = tone !== "chat" || hourScene() === "night";
-      if (kind === "storm" && Math.sin(performance.now() / 380) > 0.92) {
-        ctx.fillStyle = light ? "rgba(244, 246, 255, 0.28)" : "rgba(186, 198, 214, 0.18)";
-        ctx.fillRect(0, 0, w, h);
+    function applyOpenSplash(pick) {
+      if (window.SplashRain) window.SplashRain.unmount(openSplash);
+      openArt.src = "/art/tuantuan/splash/" + pick.file + "?v=light";
+      openSplash.className = "open-splash splash-stage play " + pick.lightClass;
+      openSplash.setAttribute("style", pick.splashStyle);
+      const captionEl = document.getElementById("openCaption");
+      if (captionEl) captionEl.textContent = pick.caption;
+      if (pick.weather === "rain" && window.SplashRain) {
+        requestAnimationFrame(() => {
+          window.SplashRain.mount(openSplash, { late: pick.slot === "late" });
+        });
       }
-      for (const p of parts) {
-        if (kind === "rain" || kind === "storm") {
-          p.y += p.v * 7;
-          p.x += p.drift * 2.2;
-          ctx.strokeStyle = light
-            ? `rgba(255, 255, 255, ${0.55 + p.a * 0.4})`
-            : `rgba(126, 156, 180, ${0.42 + p.a * 0.35})`;
-          ctx.lineWidth = 1.6;
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(p.x + p.drift * 10, p.y + p.len);
-          ctx.stroke();
-        } else if (kind === "snow") {
-          p.y += p.v * 1.3;
-          p.x += Math.sin(p.y * 0.03) * 0.8;
-          ctx.fillStyle = light
-            ? `rgba(255, 255, 255, ${0.8 + p.a * 0.2})`
-            : `rgba(176, 198, 214, ${0.72 + p.a * 0.2})`;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (kind === "wind") {
-          p.x += 2.4 + p.v;
-          p.y += Math.sin(p.x * 0.02) * 0.6;
-          ctx.fillStyle = `rgba(176, 122, 64, ${0.55 + p.a * 0.35})`;
-          ctx.beginPath();
-          ctx.ellipse(p.x, p.y, p.s * 3.2, p.s, 0.6, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (kind === "fog") {
-          p.x += 0.45;
-          ctx.fillStyle = light
-            ? `rgba(255, 255, 255, ${0.16 + p.a * 0.12})`
-            : `rgba(186, 196, 204, ${0.2 + p.a * 0.12})`;
-          ctx.beginPath();
-          ctx.ellipse(p.x, p.y, w * 0.28, 28, 0, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (kind === "cloudy") {
-          p.y -= p.v * 0.7;
-          const life = (Math.sin(p.y * 0.05) + 1) / 2;
-          ctx.fillStyle = light
-            ? `rgba(255, 255, 255, ${life * 0.55})`
-            : `rgba(168, 176, 184, ${life * 0.4})`;
-          ctx.beginPath();
-          ctx.ellipse(p.x, p.y, 8, 22, 0, 0, Math.PI * 2);
-          ctx.fill();
-        } else {
-          p.y -= p.v * 0.55;
-          p.x += p.drift * 0.4;
-          ctx.fillStyle = kind === "heat"
-            ? `rgba(255, 176, 80, ${0.45 + p.a * 0.4})`
-            : `rgba(232, 186, 110, ${light ? 0.4 + p.a * 0.45 : 0.35 + p.a * 0.35})`;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.s * 1.1, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        if (p.y > h + 24) p.y = -20;
-        if (p.y < -28) p.y = h + 12;
-        if (p.x > w + 24) p.x = -20;
-        if (p.x < -24) p.x = w + 12;
-      }
-    }
-
-    function seedSplashParts(kind, w, h) {
-      splashParts = makeParts(kind, w, h);
-    }
-    function drawSplashFx(kind) {
-      drawFx(splashCtx, openFx.width, openFx.height, kind, splashParts, "splash");
     }
 
     function finishSplash() {
       if (!splashStarted || openSplash.classList.contains("leave")) return;
       openSplash.classList.add("leave");
-      cancelAnimationFrame(splashLoop);
+      if (window.SplashRain) window.SplashRain.unmount(openSplash);
       setTimeout(() => {
         openSplash.hidden = true;
         speak(opening, 200);
+        if (typeof gsap !== "undefined" && !reduceMotion) {
+          if (blinkCall) blinkCall.kill();
+          blinkCall = gsap.delayedCall(0.9, playBlink);
+        }
       }, 460);
     }
 
     function beginSplash() {
       if (splashStarted) return;
       splashStarted = true;
-      const kind = splashKind();
+      const pick = splashPick();
       const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      openArt.src = "/art/tuantuan/splash/" + SPLASH_FILE[kind] + "?v=splash";
+      applyOpenSplash(pick);
       openSplash.hidden = false;
-      openSplash.classList.add("play");
       try { navigator.vibrate(12); } catch (e) { /* 网页里轻震不一定可用 */ }
-      const rect = openSplash.getBoundingClientRect();
-      openFx.width = Math.max(1, Math.round(rect.width));
-      openFx.height = Math.max(1, Math.round(rect.height));
-      seedSplashParts(kind, openFx.width, openFx.height);
-      if (!reduce) {
-        const tickFx = () => {
-          drawSplashFx(kind);
-          splashLoop = requestAnimationFrame(tickFx);
-        };
-        splashLoop = requestAnimationFrame(tickFx);
-      }
       openSplash.addEventListener("click", finishSplash, { once: true });
       if (query.get("look") !== "1") setTimeout(finishSplash, reduce ? 700 : 4200);
     }
