@@ -24,14 +24,14 @@
     <view class="splash-fx fx-{{splashKind}}"></view>
   </view>
 
-  <view class="shelter">
-    <view class="hero">
-      <view class="pills">
-        <view wx:if="{{weatherIcon}}" class="weather-pill w-{{weatherKind}}">{{weatherIcon}}</view>
-        <view class="time-pill">{{hourLabel}}</view>
-      </view>
+  <view class="hero">
+    <view class="pills">
+      <view wx:if="{{weatherIcon}}" class="weather-pill w-{{weatherKind}}">{{weatherIcon}}</view>
+      <view class="time-pill">{{hourLabel}}</view>
     </view>
+  </view>
 
+  <view class="shelter">
     <scroll-view class="list" scroll-y scroll-into-view="{{anchor}}" scroll-with-animation>
       <view wx:for="{{messages}}" wx:key="id" id="m-{{item.id}}" class="row {{item.role}} {{item.switch ? 'switch' : ''}}">
         <image wx:if="{{item.role === 'ai'}}" class="tuantuan" src="/images/tuantuan/tuantuan-default.jpg" mode="aspectFill"></image>
