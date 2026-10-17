@@ -1,6 +1,6 @@
 /**
  * ?pose=write / ?pose=agree
- * 页面主脚本若没跑起来，仍要播一次动作再回待机。
+ * 页面主脚本若没跑起来（例如内联脚本被拦），仍要播一次动作再回待机。
  */
 (function () {
   const pose = new URLSearchParams(location.search).get("pose");
@@ -44,63 +44,28 @@
 
   function sealGreenCracks(d, w, h) {
     const src = new Uint8ClampedArray(d);
-    const bands = [
-      [(w * 0.70) | 0, (w * 0.88) | 0, (h * 0.48) | 0, (h * 0.63) | 0],
-      [(w * 0.62) | 0, (w * 0.90) | 0, (h * 0.45) | 0, (h * 0.66) | 0],
-    ];
-    for (const [x0, x1, y0, y1] of bands) {
-      for (let y = Math.max(2, y0); y < Math.min(h - 2, y1); y++) {
-        for (let x = Math.max(2, x0); x < Math.min(w - 2, x1); x++) {
-          const i = (y * w + x) * 4;
-          if (!isGreen(src[i], src[i + 1], src[i + 2])) continue;
-          let sr = 0, sg = 0, sb = 0, n = 0;
-          for (let dy = -4; dy <= 4; dy++) {
-            for (let dx = -4; dx <= 4; dx++) {
-              if (!dx && !dy) continue;
-              const j = ((y + dy) * w + (x + dx)) * 4;
-              if (isCloak(src[j], src[j + 1], src[j + 2])) {
-                sr += src[j]; sg += src[j + 1]; sb += src[j + 2]; n++;
-              }
+    const y0 = (h * 0.24) | 0, y1 = (h * 0.48) | 0;
+    const x0 = (w * 0.45) | 0, x1 = (w * 0.88) | 0;
+    for (let y = Math.max(2, y0); y < Math.min(h - 2, y1); y++) {
+      for (let x = Math.max(2, x0); x < Math.min(w - 2, x1); x++) {
+        const i = (y * w + x) * 4;
+        if (!isGreen(src[i], src[i + 1], src[i + 2])) continue;
+        let sr = 0, sg = 0, sb = 0, n = 0;
+        for (let dy = -2; dy <= 2; dy++) {
+          for (let dx = -2; dx <= 2; dx++) {
+            if (!dx && !dy) continue;
+            const j = ((y + dy) * w + (x + dx)) * 4;
+            if (isCloak(src[j], src[j + 1], src[j + 2])) {
+              sr += src[j]; sg += src[j + 1]; sb += src[j + 2]; n++;
             }
           }
-          if (n >= 6) {
-            d[i] = (sr / n) | 0;
-            d[i + 1] = (sg / n) | 0;
-            d[i + 2] = (sb / n) | 0;
-          }
+        }
+        if (n >= 6) {
+          d[i] = (sr / n) | 0;
+          d[i + 1] = (sg / n) | 0;
+          d[i + 2] = (sb / n) | 0;
         }
       }
-    }
-  }
-
-  function fillKeyedHoles(d, w, h) {
-    for (let pass = 0; pass < 3; pass++) {
-      const cur = new Uint8ClampedArray(d);
-      let changed = 0;
-      for (let y = 2; y < h - 2; y++) {
-        for (let x = 2; x < w - 2; x++) {
-          const i = (y * w + x) * 4;
-          if (cur[i + 3] > 20) continue;
-          let sr = 0, sg = 0, sb = 0, n = 0;
-          for (let dy = -2; dy <= 2; dy++) {
-            for (let dx = -2; dx <= 2; dx++) {
-              if (!dx && !dy) continue;
-              const j = ((y + dy) * w + (x + dx)) * 4;
-              if (cur[j + 3] < 180) continue;
-              if (isGreen(cur[j], cur[j + 1], cur[j + 2])) continue;
-              sr += cur[j]; sg += cur[j + 1]; sb += cur[j + 2]; n++;
-            }
-          }
-          if (n >= 10) {
-            d[i] = (sr / n) | 0;
-            d[i + 1] = (sg / n) | 0;
-            d[i + 2] = (sb / n) | 0;
-            d[i + 3] = 255;
-            changed++;
-          }
-        }
-      }
-      if (!changed) break;
     }
   }
 
@@ -120,7 +85,6 @@
     sctx.drawImage(video, 0, 0, w, h);
     const img = sctx.getImageData(0, 0, w, h);
     const d = img.data;
-    sealGreenCracks(d, w, h);
     sealGreenCracks(d, w, h);
     sealGreenCracks(d, w, h);
     const seen = new Uint8Array(w * h);
@@ -143,19 +107,6 @@
       const y = (p / w) | 0;
       push(x + 1, y); push(x - 1, y); push(x, y + 1); push(x, y - 1);
     }
-    for (let y = 1; y < h - 1; y++) {
-      for (let x = 1; x < w - 1; x++) {
-        const p = y * w + x;
-        const i = p * 4;
-        if (d[i + 3] === 0) continue;
-        const r = d[i], g = d[i + 1], b = d[i + 2];
-        if (!(g > r + 22 && g > b + 22 && g > 125)) continue;
-        const edge = d[(p - 1) * 4 + 3] === 0 || d[(p + 1) * 4 + 3] === 0 || d[(p - w) * 4 + 3] === 0 || d[(p + w) * 4 + 3] === 0;
-        if (edge) d[i + 3] = 0;
-        else d[i + 1] = Math.min(g, (r + b) >> 1);
-      }
-    }
-    fillKeyedHoles(d, w, h);
     sctx.putImageData(img, 0, 0);
     ctx.clearRect(0, 0, stage.width, stage.height);
     ctx.drawImage(scratch, 0, 0);
