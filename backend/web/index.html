@@ -423,8 +423,15 @@
       min-height: 36px;
       max-height: 80px;
       background: transparent;
-      color: var(--ink);
+      color: #1a1612;
+      -webkit-text-fill-color: #1a1612;
+      caret-color: #1a1612;
       outline: none;
+    }
+    textarea::placeholder {
+      color: #8a7f72;
+      -webkit-text-fill-color: #8a7f72;
+      opacity: 1;
     }
     .send {
       width: 38px;
@@ -455,27 +462,18 @@
       box-shadow: none;
     }
     .otter .shadow { position: absolute; left: 50%; bottom: 0; width: 62%; height: 16px; transform: translateX(-50%); background: radial-gradient(ellipse, rgba(40,28,16,.4), transparent 70%); z-index: 0; }
-    .pose { position: relative; z-index: 1; height: 100%; transform-origin: 50% 92%; will-change: transform; }
-    .chest { position: relative; height: 100%; transform-origin: 50% 82%; perspective: 900px; will-change: transform; }
-    .chest > svg.open-sheet {
-      height: 100%; width: auto; display: block; overflow: hidden;
-      -webkit-mask-image: linear-gradient(to bottom, transparent 56%, #000 64%);
-      mask-image: linear-gradient(to bottom, transparent 56%, #000 64%);
+    .actor { position: relative; height: 100%; }
+    .actor .actor-still, .actor canvas.actor-stage {
+      position: absolute; left: 50%; bottom: 0; height: 100%; width: auto;
+      transform: translateX(-50%);
+      pointer-events: none; object-fit: contain; object-position: center bottom;
+      background: transparent;
     }
-    .head {
-      position: absolute; left: 0; top: 0; width: 100%; height: 66%;
-      transform-origin: 50% 88%; z-index: 2; will-change: transform;
-      -webkit-mask-image: linear-gradient(to bottom, #000 84%, transparent 100%);
-      mask-image: linear-gradient(to bottom, #000 84%, transparent 100%);
+    .actor .actor-still { opacity: 1; transition: opacity .2s linear; }
+    .actor video {
+      position: absolute; left: 50%; bottom: 0; height: 100%; width: auto;
+      transform: translateX(-50%); opacity: 0; pointer-events: none;
     }
-    .head svg { width: 100%; height: 100%; display: block; overflow: hidden; }
-    .head .shut-sheet { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
-    .lid { position: absolute; width: 16%; height: 13%; top: 64%; border-radius: 50%; background: #e6c7a6; transform: scaleY(0); transform-origin: 50% 60%; will-change: transform; pointer-events: none; z-index: 2; }
-    .lid.l { left: 24%; }
-    .lid.r { left: 50%; }
-    .shut { opacity: 0; will-change: opacity; }
-    .ink { position: absolute; left: 38%; top: 67%; width: 22%; height: 8%; z-index: 4; pointer-events: none; opacity: 0; overflow: visible; }
-    .ink path { fill: none; stroke: #2c1d12; stroke-width: 4; stroke-linecap: round; }
     .phone[data-fire="small"] .stage-ground::after, .phone[data-fire="full"] .stage-ground::after, .phone[data-fire="blaze"] .stage-ground::after {
       content: ""; position: absolute; left: 0; bottom: 14%; width: 120px; height: 70px; pointer-events: none;
       background: radial-gradient(circle, rgba(255,168,64,.28), transparent 72%);
@@ -486,7 +484,9 @@
     @keyframes rain { to { background-position: 18px 28px; } }
     @keyframes snow { to { background-position: 12px 40px; } }
     .glyphs { position: absolute; right: 6%; top: -2%; z-index: 5; pointer-events: none; }
-    .glyphs span { opacity: 0; visibility: hidden; padding: 4px 10px; border-radius: 14px; background: rgba(255,252,246,.94); color: #5c5348; font-size: 15px; box-shadow: 0 6px 14px rgba(60,40,20,.12); will-change: transform; }
+    .glyphs span { opacity: 0; visibility: hidden; padding: 4px 10px; border-radius: 14px; background: rgba(255,252,246,.94); color: #5c5348; font-size: 15px; box-shadow: 0 6px 14px rgba(60,40,20,.12); }
+    .phone[data-pose="think"] .glyphs .think { opacity: 1; visibility: visible; animation: thinkbob 1.4s ease-in-out infinite; }
+    @keyframes thinkbob { 50% { transform: translateY(-5px); } }
     .phone > .chrome { position: absolute; top: 0; left: 0; right: 0; z-index: 6; display: flex; align-items: center; justify-content: space-between; padding: 14px 14px 0; background: transparent !important; }
     .chrome .back, .chrome .sound { width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgba(255,252,246,.28); color: #3d342c; display: grid; place-items: center; }
     .phone[data-sky="night"] .chrome .back, .phone[data-sky="night"] .chrome .sound, .phone[data-sky="late"] .chrome .back, .phone[data-sky="late"] .chrome .sound { color: #f7f1e6; background: rgba(255,255,255,.12); }
@@ -544,27 +544,14 @@
           <div class="blaze"><i></i><i></i></div>
           <div class="otter">
             <i class="shadow"></i>
-            <div class="pose">
-              <div class="chest">
-                <svg class="open-sheet" viewBox="0 0 765 927" preserveAspectRatio="xMidYMax meet" role="img" aria-label="团团">
-                  <image href="/art/tuantuan/tuantuan-wizard-ref.png?v=stand2" width="765" height="927" />
-                </svg>
-                <div class="head">
-                  <svg viewBox="0 0 765 612" preserveAspectRatio="xMidYMin slice">
-                    <image href="/art/tuantuan/tuantuan-wizard-ref.png?v=stand2" width="765" height="927" />
-                  </svg>
-                  <i class="lid l"></i>
-                  <i class="lid r"></i>
-                  <svg class="shut-sheet" viewBox="0 0 765 612" preserveAspectRatio="xMidYMin slice">
-                    <image class="shut" href="/art/tuantuan/tuantuan-wizard-shut.png?v=shut1" width="765" height="927" />
-                  </svg>
-                </div>
-                <svg class="ink" viewBox="0 0 100 40" aria-hidden="true">
-                  <path class="a" d="M8 12 C 30 6, 54 16, 92 8" />
-                  <path class="b" d="M10 28 C 34 22, 58 32, 90 24" />
-                </svg>
-                <div class="glyphs" aria-hidden="true"><span class="think">……</span></div>
-              </div>
+            <div class="actor" id="actor">
+              <img class="actor-still" src="/art/tuantuan/tuantuan-wizard-ref.png?v=stand11" alt="团团" />
+              <video data-clip="idle" src="/art/tuantuan/clips/idle.mp4?v=clip5" poster="/art/tuantuan/tuantuan-wizard-ref.png?v=stand11" muted playsinline loop preload="auto"></video>
+              <video data-clip="write" src="/art/tuantuan/clips/write.mp4?v=clip7" poster="/art/tuantuan/tuantuan-wizard-ref.png?v=stand11" muted playsinline webkit-playsinline preload="auto"></video>
+              <video data-clip="agree" src="/art/tuantuan/clips/agree.mp4?v=clip6" poster="/art/tuantuan/tuantuan-wizard-ref.png?v=stand11" muted playsinline webkit-playsinline preload="auto"></video>
+              <video data-clip="comfort" src="/art/tuantuan/clips/comfort.mp4?v=clip5" poster="/art/tuantuan/tuantuan-wizard-ref.png?v=stand11" muted playsinline preload="none"></video>
+              <canvas class="actor-stage" id="actorStage"></canvas>
+              <div class="glyphs" aria-hidden="true"><span class="think">……</span></div>
             </div>
           </div>
         </section>
@@ -608,11 +595,9 @@
       </div>
     </div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="/js/splashLight.js"></script>
   <script src="/js/splashRain.js"></script>
   <script>
-    window.addEventListener("error", (e) => { window.__boot = (e.message || "") + " @" + e.lineno + ":" + e.colno; });
     const note = document.getElementById("note");
     const noteText = document.getElementById("noteText");
     const valley = document.getElementById("valley");
@@ -629,7 +614,9 @@
     let lastRole = "";
     const opening = "我在这里。你想说什么都可以";
     const hourNames = { dawn: "清晨了", noon: "午后了", dusk: "傍晚了", night: "夜里了" };
+    window.__echoBoot = 1;
     const query = new URLSearchParams(location.search);
+    const previewPose = query.get("pose") === "write" || query.get("pose") === "agree" ? query.get("pose") : "";
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // ?speed=720 plays a full day in two minutes; ?at=06:30 sets the starting clock.
@@ -715,192 +702,244 @@
     }
 
     let poseBusy = false;
-    let poseTl = null;
-    let blinkTl = null;
-    let blinkCall = null;
+    const actor = document.getElementById("actor");
+    const still = actor.querySelector(".actor-still");
+    const stage = document.getElementById("actorStage");
+    const actorCtx = stage.getContext("2d");
+    const scratch = document.createElement("canvas");
+    const sctx = scratch.getContext("2d", { willReadFrequently: true });
+    const CLIP_OF = { idle: "idle", listen: "idle", think: "idle", look: "idle", write: "write", agree: "agree", comfort: "comfort" };
+    const ONCE = { write: 1, agree: 1, comfort: 1 };
+    const mem = navigator.deviceMemory || 0;
+    const cores = navigator.hardwareConcurrency || 0;
+    const saveData = !!(navigator.connection && navigator.connection.saveData);
+    const staticMode = !previewPose && (reduceMotion || saveData || (mem > 0 && mem <= 2) || (cores > 0 && cores <= 2));
+    let clipWait = null;
+    let shown = null;
+    let outgoing = null;
+    let fadeAt = 0;
 
-    function breathSpan() {
-      return 3.6 + Math.random() * 1.6;
+    function clipEl(name) {
+      return actor.querySelector('video[data-clip="' + name + '"]');
     }
 
-    function blinkGap() {
-      return 2.4 + Math.random() * 3.6;
+    function waitEnded(video) {
+      return new Promise((resolve) => {
+        const done = () => {
+          video.removeEventListener("ended", done);
+          if (clipWait === done) clipWait = null;
+          resolve();
+        };
+        clipWait = done;
+        video.addEventListener("ended", done);
+      });
     }
 
-    function killPose() {
-      if (poseTl) {
-        poseTl.kill();
-        poseTl = null;
-      }
-      gsap.killTweensOf(".pose");
-      gsap.killTweensOf(".head");
-      gsap.killTweensOf(".think");
-      gsap.killTweensOf(".ink path");
-      gsap.set(".think", { autoAlpha: 0, y: 0 });
-      gsap.set(".ink", { autoAlpha: 0 });
+    function isGreen(r, g, b) {
+      return g > 140 && r < 96 && b < 96;
     }
 
-    function pauseBlink() {
-      if (blinkCall) {
-        blinkCall.kill();
-        blinkCall = null;
-      }
-      if (blinkTl) {
-        blinkTl.kill();
-        blinkTl = null;
-      }
-      if (typeof gsap !== "undefined") {
-        gsap.set(".shut", { opacity: 0 });
-        gsap.set(".lid", { scaleY: 0 });
+    function isCloak(r, g, b) {
+      if (g > r + 15 && g > b + 15) return false;
+      if (r < 30 && g < 30 && b < 30) return false;
+      return (b > 40 || r > 40) && (r + b) > g + 20 && g < 160;
+    }
+
+    // 领口绿缝只补绿像素，不动暗色（避免伤到眼睛）。
+    function sealGreenCracks(d, w, h) {
+      const src = new Uint8ClampedArray(d);
+      const y0 = (h * 0.24) | 0, y1 = (h * 0.48) | 0;
+      const x0 = (w * 0.45) | 0, x1 = (w * 0.88) | 0;
+      for (let y = Math.max(2, y0); y < Math.min(h - 2, y1); y++) {
+        for (let x = Math.max(2, x0); x < Math.min(w - 2, x1); x++) {
+          const i = (y * w + x) * 4;
+          if (!isGreen(src[i], src[i + 1], src[i + 2])) continue;
+          let sr = 0, sg = 0, sb = 0, n = 0;
+          for (let dy = -2; dy <= 2; dy++) {
+            for (let dx = -2; dx <= 2; dx++) {
+              if (!dx && !dy) continue;
+              const j = ((y + dy) * w + (x + dx)) * 4;
+              if (isCloak(src[j], src[j + 1], src[j + 2])) {
+                sr += src[j]; sg += src[j + 1]; sb += src[j + 2]; n++;
+              }
+            }
+          }
+          if (n >= 6) {
+            d[i] = (sr / n) | 0;
+            d[i + 1] = (sg / n) | 0;
+            d[i + 2] = (sb / n) | 0;
+          }
+        }
       }
     }
 
-    function playBlink() {
-      blinkCall = null;
-      if (reduceMotion || document.hidden || valley.dataset.pose === "agree") {
-        scheduleBlink();
+    function keyOnto(video, alpha) {
+      if (!video || video.readyState < 2 || video.dataset.dead === "1") return false;
+      const w = scratch.width;
+      const h = scratch.height;
+      sctx.drawImage(video, 0, 0, w, h);
+      const img = sctx.getImageData(0, 0, w, h);
+      const d = img.data;
+      sealGreenCracks(d, w, h);
+      sealGreenCracks(d, w, h);
+      const seen = new Uint8Array(w * h);
+      const stack = [];
+      function push(x, y) {
+        if (x < 0 || y < 0 || x >= w || y >= h) return;
+        const p = y * w + x;
+        if (seen[p]) return;
+        const i = p * 4;
+        if (!isGreen(d[i], d[i + 1], d[i + 2])) return;
+        seen[p] = 1;
+        stack.push(p);
+      }
+      for (let x = 0; x < w; x++) { push(x, 0); push(x, h - 1); }
+      for (let y = 0; y < h; y++) { push(0, y); push(w - 1, y); }
+      while (stack.length) {
+        const p = stack.pop();
+        d[p * 4 + 3] = 0;
+        const x = p % w;
+        const y = (p / w) | 0;
+        push(x + 1, y); push(x - 1, y); push(x, y + 1); push(x, y - 1);
+      }
+      for (let pass = 0; pass < 2; pass++) {
+        for (let y = 1; y < h - 1; y++) {
+          for (let x = 1; x < w - 1; x++) {
+            const p = y * w + x;
+            const i = p * 4;
+            if (d[i + 3] === 0) continue;
+            const r = d[i], g = d[i + 1], b = d[i + 2];
+            if (!(g > r + 18 && g > b + 18 && g > 110)) continue;
+            const edge = d[(p - 1) * 4 + 3] === 0 || d[(p + 1) * 4 + 3] === 0 || d[(p - w) * 4 + 3] === 0 || d[(p + w) * 4 + 3] === 0;
+            if (edge) d[i + 3] = 0;
+            else d[i + 1] = Math.min(g, (r + b) >> 1);
+          }
+        }
+      }
+      if (alpha < 0.99) {
+        for (let i = 3; i < d.length; i += 4) d[i] = (d[i] * alpha) | 0;
+      }
+      sctx.putImageData(img, 0, 0);
+      actorCtx.drawImage(scratch, 0, 0);
+      return true;
+    }
+
+    function paintActor() {
+      if (!staticMode && !document.hidden) {
+        const rect = still.getBoundingClientRect();
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const w = Math.max(2, Math.round(rect.width * dpr));
+        const h = Math.max(2, Math.round(rect.height * dpr));
+        if (w > 2 && h > 2 && (scratch.width !== w || scratch.height !== h)) {
+          scratch.width = w;
+          scratch.height = h;
+          stage.width = w;
+          stage.height = h;
+        }
+        actorCtx.clearRect(0, 0, stage.width, stage.height);
+        const fade = outgoing ? Math.min(1, (performance.now() - fadeAt) / 200) : 1;
+        let live = false;
+        try {
+          if (outgoing && fade < 1) live = keyOnto(outgoing, 1 - fade) || live;
+          if (shown) live = keyOnto(shown, outgoing ? fade : 1) || live;
+        } catch (e) {
+          live = false;
+        }
+        if (outgoing && fade >= 1) {
+          if (outgoing !== shown) outgoing.pause();
+          outgoing = null;
+        }
+        still.style.opacity = live ? "0" : "1";
+      }
+      requestAnimationFrame(paintActor);
+    }
+
+    function arm(video) {
+      video.muted = true;
+      video.defaultMuted = true;
+      video.playsInline = true;
+      video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
+    }
+
+    function startVideo(next) {
+      arm(next);
+      const begin = () => {
+        if (shown !== next) return;
+        try { next.currentTime = 0; } catch (e) { /* 片段还没就绪 */ }
+        const pending = next.play();
+        if (pending && pending.catch) {
+          pending.catch((err) => {
+            if (shown !== next) return;
+            if (err && err.name === "AbortError") {
+              next.play().catch(() => {});
+              return;
+            }
+            next.dataset.dead = "1";
+            shown = null;
+          });
+        }
+      };
+      if (next.readyState >= 2) {
+        begin();
         return;
       }
-      blinkTl = gsap.timeline({ onComplete: scheduleBlink });
-      blinkTl.to(".shut", { opacity: 1, duration: 0.08, ease: "power2.in" }, 0)
-        .to(".lid", { scaleY: 1, duration: 0.08, ease: "power2.in" }, 0)
-        .to(".shut", { opacity: 1, duration: 0.07 })
-        .to(".shut", { opacity: 0, duration: 0.16, ease: "power2.out" })
-        .to(".lid", { scaleY: 0, duration: 0.16, ease: "power2.out" }, "<");
+      next.preload = "auto";
+      next.addEventListener("loadeddata", begin, { once: true });
+      try { next.load(); } catch (e) { /* 已经在加载 */ }
     }
 
-    function scheduleBlink() {
-      if (reduceMotion || typeof gsap === "undefined") return;
-      if (blinkCall) blinkCall.kill();
-      blinkCall = gsap.delayedCall(blinkGap(), playBlink);
+    function playClip(name, once) {
+      try {
+        if (clipWait) {
+          const finish = clipWait;
+          clipWait = null;
+          finish();
+        }
+        if (staticMode) return Promise.resolve();
+        const next = clipEl(name);
+        if (!next || next.dataset.dead === "1" || next.error) {
+          if (next) next.dataset.dead = "1";
+          return Promise.resolve();
+        }
+        if (shown === next) {
+          if (next.paused && !document.hidden) startVideo(next);
+          return once ? waitEnded(next) : Promise.resolve();
+        }
+        if (outgoing && outgoing !== next) outgoing.pause();
+        outgoing = shown;
+        fadeAt = performance.now();
+        shown = next;
+        startVideo(next);
+        next.classList.add("on");
+        if (outgoing) outgoing.classList.remove("on");
+        return once ? waitEnded(next) : Promise.resolve();
+      } catch (e) {
+        return Promise.resolve();
+      }
     }
-
-    function resumeBlink() {
-      if (reduceMotion || typeof gsap === "undefined") return;
-      if ((blinkTl && blinkTl.isActive()) || blinkCall) return;
-      scheduleBlink();
-    }
-
-    function playListening() {
-      killPose();
-      resumeBlink();
-      poseTl = gsap.timeline();
-      poseTl.to(".pose", { rotation: 0, x: 0, y: 0, scale: 1, duration: 0.35, ease: "power2.out" }, 0);
-      poseTl.to(".head", { rotationZ: -10, rotationX: 0, duration: 0.4, ease: "power2.out" }, 0);
-      return poseTl;
-    }
-
-    function playThinking() {
-      killPose();
-      resumeBlink();
-      poseTl = gsap.timeline();
-      poseTl.to(".pose", { rotation: 0, x: 0, y: 0, scale: 1, duration: 0.35, ease: "power2.out" }, 0);
-      poseTl.to(".head", { rotationZ: 7, rotationX: 0, duration: 0.4, ease: "power2.out" }, 0);
-      poseTl.to(".think", { autoAlpha: 1, duration: 0.3, ease: "power2.out" }, 0);
-      gsap.to(".think", { y: -5, duration: 0.7, ease: "sine.inOut", yoyo: true, repeat: -1 });
-      return poseTl;
-    }
-
-    function playWrite() {
-      killPose();
-      resumeBlink();
-      const strokes = [...document.querySelectorAll(".ink path")];
-      strokes.forEach((path) => {
-        const len = path.getTotalLength();
-        gsap.set(path, { strokeDasharray: len, strokeDashoffset: len });
-      });
-      poseTl = gsap.timeline();
-      poseTl.to(".pose", { rotation: 0, x: 0, y: 0, scale: 1, duration: 0.3, ease: "power2.out" }, 0);
-      poseTl.to(".head", { rotationX: 14, rotationZ: 0, duration: 0.35, ease: "power2.out" }, 0);
-      poseTl.set(".ink", { autoAlpha: 1 }, 0.22);
-      poseTl.to(strokes[0], { strokeDashoffset: 0, duration: 0.4, ease: "none" }, 0.26);
-      poseTl.to(strokes[1], { strokeDashoffset: 0, duration: 0.4, ease: "none" }, 0.72);
-      poseTl.to(".head", { rotationX: 0, duration: 0.4, ease: "power2.inOut" }, 1.2);
-      poseTl.set(".ink", { autoAlpha: 0 });
-      return poseTl;
-    }
-
-    function playLook() {
-      killPose();
-      resumeBlink();
-      poseTl = gsap.timeline();
-      poseTl.to(".pose", { rotation: 0, x: 0, y: 0, scale: 1, duration: 0.35, ease: "power2.out" }, 0);
-      poseTl.to(".head", { rotationZ: 0, rotationX: -8, duration: 0.4, ease: "power2.out" }, 0);
-      return poseTl;
-    }
-
-    function playAgree() {
-      killPose();
-      pauseBlink();
-      poseTl = gsap.timeline({ onComplete: resumeBlink });
-      poseTl.to(".pose", { rotation: 0, x: 0, y: 0, scale: 1, duration: 0.2, ease: "power2.out" }, 0);
-      poseTl.to(".head", { rotationX: 12, rotationZ: 0, duration: 0.14, ease: "power2.out" }, 0)
-        .to(".shut", { opacity: 1, duration: 0.1, ease: "power2.out" }, 0)
-        .to(".lid", { scaleY: 1, duration: 0.1, ease: "power2.out" }, 0)
-        .to(".head", { rotationX: 0, duration: 0.14, ease: "power2.inOut" })
-        .to(".head", { rotationX: 12, duration: 0.14, ease: "power2.out" })
-        .to(".head", { rotationX: 0, duration: 0.16, ease: "power2.inOut" })
-        .to(".shut", { opacity: 0, duration: 0.16, ease: "power2.out" }, ">-0.12")
-        .to(".lid", { scaleY: 0, duration: 0.16, ease: "power2.out" }, "<");
-      return poseTl;
-    }
-
-    function playComfort() {
-      killPose();
-      resumeBlink();
-      poseTl = gsap.timeline();
-      poseTl.to(".head", { rotationX: 0, rotationZ: 0, duration: 0.35, ease: "power2.out" }, 0);
-      poseTl.to(".pose", { scale: 1.06, y: -12, x: 0, rotation: 0, duration: 0.45, ease: "power2.out" }, 0)
-        .to(".pose", { scale: 1, y: 0, duration: 0.45, ease: "power2.out" }, "+=2");
-      return poseTl;
-    }
-
-    function playIdle() {
-      killPose();
-      resumeBlink();
-      poseTl = gsap.timeline();
-      poseTl.to(".pose", { rotation: 0, x: 0, y: 0, scale: 1, duration: 0.4, ease: "power2.out" }, 0);
-      poseTl.to(".head", { rotationX: 0, rotationZ: 0, duration: 0.4, ease: "power2.out" }, 0);
-      return poseTl;
-    }
-
-    const posePlays = {
-      listen: playListening,
-      think: playThinking,
-      write: playWrite,
-      look: playLook,
-      agree: playAgree,
-      comfort: playComfort,
-      idle: playIdle,
-    };
 
     function setPose(name) {
       valley.dataset.pose = name;
-      if (typeof gsap === "undefined") return Promise.resolve();
-      return posePlays[name] ? posePlays[name]() : playIdle();
+      return playClip(CLIP_OF[name] || "idle", !!ONCE[name]);
     }
 
-    if (typeof gsap !== "undefined") {
-      gsap.set(".pose", { transformOrigin: "50% 92%" });
-      gsap.set(".chest", { transformOrigin: "50% 82%", scaleY: 1 });
-      gsap.set(".head", { transformOrigin: "50% 88%", rotationX: 0, rotationZ: 0 });
-      gsap.set(".lid", { transformOrigin: "50% 60%", scaleY: 0 });
-      gsap.set(".shut", { opacity: 0 });
-      gsap.set(".ink", { autoAlpha: 0 });
-      if (!reduceMotion) {
-        gsap.to(".chest", {
-          scaleY: 1.018,
-          duration: breathSpan(),
-          ease: "sine.inOut",
-          yoyo: true,
-          repeat: -1,
-          onRepeat() { this.duration(breathSpan()); },
+    if (!staticMode) {
+      actor.querySelectorAll("video").forEach((video) => {
+        video.addEventListener("error", () => {
+          video.dataset.dead = "1";
+          video.classList.remove("on");
+          if (shown === video) shown = null;
         });
-        document.addEventListener("visibilitychange", () => {
-          if (document.hidden) gsap.ticker.sleep();
-          else gsap.ticker.wake();
+      });
+      if (!previewPose) setPose("idle");
+      requestAnimationFrame(paintActor);
+      document.addEventListener("visibilitychange", () => {
+        actor.querySelectorAll("video").forEach((video) => {
+          if (document.hidden) video.pause();
+          else if (video === shown) video.play().catch(() => {});
         });
-      }
+      });
     }
 
     function releaseWords() {
@@ -937,10 +976,10 @@
     }
 
     async function speak(text, delay) {
-      setPose("look");
+      if (!previewPose) setPose("look");
       if (delay) await sleep(delay);
       await typewrite(noteText, text);
-      if (!poseBusy && !input.value.trim()) setPose("idle");
+      if (!previewPose && !poseBusy && !input.value.trim()) setPose("idle");
     }
 
     const PLATE_OF = { clear: "clear", partly: "clear", cloudy: "cloudy", fog: "cloudy", rain: "rain", storm: "rain", snow: "snow" };
@@ -1632,16 +1671,21 @@
       setTimeout(() => {
         openSplash.hidden = true;
         speak(opening, 200);
-        if (typeof gsap !== "undefined" && !reduceMotion) {
-          if (blinkCall) blinkCall.kill();
-          blinkCall = gsap.delayedCall(0.9, playBlink);
-        }
       }, 460);
     }
 
     function beginSplash() {
       if (splashStarted) return;
       splashStarted = true;
+      if (previewPose) {
+        openSplash.hidden = true;
+        poseBusy = true;
+        setPose(previewPose).then(() => {
+          poseBusy = false;
+          if (!input.value.trim()) setPose("idle");
+        });
+        return;
+      }
       const pick = splashPick();
       const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
       applyOpenSplash(pick);
@@ -1664,7 +1708,8 @@
     requestAnimationFrame(frame);
     loadWeather();
     setInterval(loadWeather, 30 * 60 * 1000);
-    setTimeout(beginSplash, 900);
+    setTimeout(beginSplash, previewPose ? 0 : 900);
   </script>
+  <script src="/js/posePreview.js?v=2"></script>
 </body>
 </html>
