@@ -1,23 +1,12 @@
 const app = getApp();
 const OPENING = "我在这里。你想说什么都可以";
 const { lookup } = require("../../utils/valleyScene");
-const { pickSplash, buildSplashRain } = require("../../utils/splashScene");
+const { pickSplash } = require("../../utils/splashScene");
 const sound = require("../../utils/valleySound");
-
-function spots(count, kind) {
-  const list = [];
-  const n = Math.min(count, 24);
-  for (let i = 0; i < n; i += 1) {
-    list.push({
-      id: i,
-      left: Math.round(Math.random() * 100),
-      top: Math.round(Math.random() * 46),
-      delay: (Math.random() * 3).toFixed(2),
-      duration: (kind === "snow" ? 5 + Math.random() * 3 : 0.8 + Math.random() * 0.5).toFixed(2),
-    });
-  }
-  return list;
-}
+const { createActor, moodFor } = require("../../utils/tuantuanActor");
+const { worldState } = require("../../utils/weatherWorld");
+const { createWindowFx } = require("../../utils/windowFx");
+const { createSplashRain } = require("../../utils/splashRain");
 
 function lowPowerDevice() {
   try {
@@ -28,24 +17,37 @@ function lowPowerDevice() {
   }
 }
 
+/** VideoDecoder 失败时退回待机静帧（与网页 actor-still 同档） */
+const OTTER_IDLE = "/images/tuantuan/tuantuan-wizard-idle.webp";
+
 Page({
   data: {
     statusBar: 20,
     scene: lookup(new Date().getHours(), "clear"),
-    pose: "listen",
+    campGround: "grass",
+    campWet: "",
+    plateA: "",
+    plateB: "",
+    plateOnA: false,
+    plateOnB: false,
+    worldShade: "transparent",
+    worldGlow: "transparent",
+    worldHaze: 0,
+    phoneShade: "transparent",
+    phoneGlow: "transparent",
+    pose: "idle",
+    otterSrc: OTTER_IDLE,
+    actorLive: false,
     lowPower: false,
-    fireBoost: false,
-    messages: [],
     draft: "",
     sending: false,
     focused: false,
     recording: false,
     recordSec: 0,
-    ghost: null,
-    motes: spots(8, "snow"),
-    drops: [],
-    sparks: spots(6, "snow"),
-    stars: spots(12, "snow"),
+    motes: [],
+    noteText: "",
+    noteAway: true,
+    noteTransform: "",
     soundOn: true,
     settingsOpen: false,
     splashShow: false,
@@ -57,9 +59,8 @@ Page({
     splashCaption: "",
     splashLightClass: "",
     splashStyle: "",
-    splashRain: null,
-    nextId: 1,
-    anchor: "",
+    splashRainOn: false,
+    splashRainLate: false,
   },
 
   onLoad() {
@@ -69,20 +70,31 @@ Page({
       statusBar: info.statusBarHeight || 20,
       lowPower: lowPowerDevice(),
       soundOn,
+      otterSrc: OTTER_IDLE,
     });
-    this.comfortStreak = 0;
-    this.replyQueue = null;
+    this.poseBusy = false;
     this.recordCancelled = false;
+    this.plateFront = 0;
+    this.currentPlate = "";
+    this.noteSpoken = false;
+    this.dragY = 0;
+    this.fx = null;
+    this.splashRain = null;
     this.recorder = wx.getRecorderManager();
     this.recorder.onStop((res) => this.finishRecord(res));
     this.recorder.onError(() => this.setData({ recording: false }));
     this.applyScene();
     this.loadWeather();
+    // 与网页一致，每 30 分钟刷新天气
+    this.weatherTimer = setInterval(() => this.loadWeather(true), 30 * 60 * 1000);
     this.hourTimer = setInterval(() => this.applyScene(), 60000);
     this.splashStarted = false;
     this.splashDone = false;
-    this.splashWait = setTimeout(() => this.beginSplash(), 900);
-    this.scheduleNod();
+  },
+
+  onReady() {
+    this.mountActor();
+    this.mountFx();
   },
 
   onShow() {
@@ -90,11 +102,75 @@ Page({
   },
 
   onUnload() {
-    [this.hourTimer, this.nodTimer, this.typeTimer, this.splashWait, this.splashHide, this.ghostTimer, this.recordTimer, this.poseTimer, this.splashRainHero].forEach((id) => {
+    [this.hourTimer, this.weatherTimer, this.typeTimer, this.splashWait, this.splashHide, this.recordTimer].forEach((id) => {
       if (id) clearTimeout(id);
       if (id) clearInterval(id);
     });
+    if (this.actor) {
+      this.actor.destroy();
+      this.actor = null;
+    }
+    if (this.fx) {
+      this.fx.destroy();
+      this.fx = null;
+    }
+    this.stopSplashRain();
     sound.stop();
+  },
+
+  mountActor() {
+    if (this.actor) return;
+    this.actor = createActor({
+      onLive: (live) => {
+        if (this.data.actorLive === live) return;
+        this.setData({ actorLive: !!live });
+      },
+    });
+    wx.createSelectorQuery()
+      .in(this)
+      .select("#otterStage")
+      .fields({ node: true, size: true })
+      .exec((res) => {
+        const info = res && res[0];
+        if (!info || !info.node) {
+          this.setData({ actorLive: false });
+          return;
+        }
+        this.actor.mount(info.node, { width: info.width, height: info.height }).then((ok) => {
+          if (!ok) this.setData({ actorLive: false });
+          else this.actor.setPose("idle");
+        });
+      });
+  },
+
+  mountFx() {
+    if (this.data.lowPower) return;
+    this.fx = createWindowFx();
+    wx.createSelectorQuery()
+      .in(this)
+      .select("#fxStage")
+      .fields({ node: true, size: true })
+      .exec((res) => {
+        const info = res && res[0];
+        if (!info || !info.node || !this.fx) return;
+        this.fx.mount(info.node, { width: info.width, height: info.height });
+        this.syncFxWeather();
+      });
+  },
+
+  syncFxWeather() {
+    if (!this.fx) return;
+    const sky = this.sky || "clear";
+    const wet = sky === "rain" || sky === "storm" || sky === "snow";
+    const raw = this.weatherMeta && typeof this.weatherMeta.intensity === "number"
+      ? this.weatherMeta.intensity
+      : 0.45;
+    const floor = sky === "storm" ? 0.7 : 0.35;
+    this.fx.setWeather({
+      sky,
+      windy: !!(this.weatherMeta && this.weatherMeta.windy),
+      intensity: wet ? Math.max(floor, raw || floor) : raw,
+    });
   },
 
   noop() {},
@@ -104,12 +180,49 @@ Page({
     this.syncSound();
   },
 
+  setPose(pose, extra) {
+    const patch = Object.assign({ pose, otterSrc: OTTER_IDLE }, extra || {});
+    this.setData(patch);
+    if (this.actor) return this.actor.setPose(pose);
+    return Promise.resolve(false);
+  },
+
+  setPlate(src) {
+    if (!src || src === this.currentPlate) return;
+    this.currentPlate = src;
+    if (this.plateFront === 0) {
+      this.setData({ plateB: src, plateOnB: true, plateOnA: false });
+      this.plateFront = 1;
+    } else {
+      this.setData({ plateA: src, plateOnA: true, plateOnB: false });
+      this.plateFront = 0;
+    }
+  },
+
   applyScene() {
-    const scene = lookup(new Date().getHours(), this.sky || "clear");
-    const pose = scene.period === "noon" && !this.data.focused && !this.data.sending ? "nap" : this.data.pose;
-    const drops = this.data.lowPower ? [] : spots(scene.particles === "snow" ? 16 : 22, scene.particles);
-    this.setData({ scene, drops, pose: this.data.pose === "think" ? "think" : pose });
-    // 跨时段刷新：开屏仍在时按新时段重渲光线
+    const hour = new Date().getHours();
+    const sky = this.sky || "clear";
+    const scene = lookup(hour, sky);
+    const campGround = scene.ground === "snow" || scene.ground === "gold" ? scene.ground : "grass";
+    const campWet = scene.weather === "rain" || scene.weather === "storm"
+      ? "rain"
+      : scene.weather === "snow"
+        ? "snow"
+        : "";
+    const world = worldState(hour, sky);
+    this.setPlate(world.plateSrc);
+    // 天气/时段刷新不打断角色姿态（与网页 paintValley 一致）
+    this.setData({
+      scene,
+      campGround,
+      campWet,
+      worldShade: world.shade,
+      worldGlow: world.glow,
+      worldHaze: world.haze,
+      phoneShade: world.shade,
+      phoneGlow: world.glow,
+    });
+    this.syncFxWeather();
     if (this.data.splashShow && !this.splashDone) {
       this.applySplashPick(this.splashPick());
     }
@@ -124,7 +237,7 @@ Page({
     sound.play(this.data.scene.track, true);
   },
 
-  loadWeather() {
+  loadWeather(silent) {
     const apply = (lat, lon) => {
       const q = lat != null ? `?lat=${lat}&lon=${lon}` : "";
       wx.request({
@@ -136,21 +249,31 @@ Page({
             sky: this.sky,
             windy: !!data.windy,
             temperature: data.temperature,
+            intensity: data.intensity,
           };
           this.applyScene();
-          this.beginSplash();
+          if (!silent) this.beginSplash();
         },
-        fail: () => this.beginSplash(),
+        fail: () => {
+          if (!silent) this.beginSplash();
+        },
       });
     };
+    if (this._weatherLat != null) {
+      apply(this._weatherLat, this._weatherLon);
+      return;
+    }
     wx.getLocation({
       type: "wgs84",
-      success: (res) => apply(res.latitude, res.longitude),
+      success: (res) => {
+        this._weatherLat = res.latitude;
+        this._weatherLon = res.longitude;
+        apply(res.latitude, res.longitude);
+      },
       fail: () => apply(),
     });
   },
 
-  /** 开屏：时段光线 × 天气质感（配置表） */
   splashPick() {
     return pickSplash(new Date().getHours(), {
       sky: this.sky || this.data.scene.weather || "clear",
@@ -159,10 +282,9 @@ Page({
   },
 
   applySplashPick(pick) {
-    const rain =
-      pick.weather === "rain"
-        ? buildSplashRain(pick.slot === "late", !!this.data.lowPower)
-        : null;
+    const wantRain = pick.weatherFx === "rain" || pick.weather === "rain";
+    const late = pick.slot === "late" || pick.tone === "late";
+    this.stopSplashRain();
     this.setData({
       splashKind: pick.kind,
       splashTone: pick.tone,
@@ -170,33 +292,44 @@ Page({
       splashLightClass: pick.lightClass,
       splashStyle: pick.splashStyle,
       splashSrc: `/images/tuantuan/splash/${pick.file}`,
-      splashRain: rain,
+      splashRainOn: !!wantRain,
+      splashRainLate: !!late,
     });
-    if (this.splashRainHero) clearInterval(this.splashRainHero);
-    this.splashRainHero = null;
-    if (rain) {
-      this.splashRainHero = setInterval(() => this.pulseSplashRainHero(), 7000 + Math.random() * 3000);
+    if (wantRain) {
+      // 等开屏节点渲染后再挂 canvas 雨
+      setTimeout(() => this.mountSplashRain(late), 50);
     }
   },
 
-  pulseSplashRainHero() {
-    const rain = this.data.splashRain;
-    if (!rain || !rain.layers) return;
-    const near = rain.layers.find((l) => l.id === "near");
-    if (!near || !near.drops.length) return;
-    const idx = Math.floor(Math.random() * near.drops.length);
-    const key = `splashRain.layers[${rain.layers.indexOf(near)}].drops[${idx}].hero`;
-    this.setData({ [key]: true });
-    setTimeout(() => {
-      if (this.data.splashRain) this.setData({ [key]: false });
-    }, 850);
+  mountSplashRain(late) {
+    this.stopSplashRain();
+    this.splashRain = createSplashRain();
+    wx.createSelectorQuery()
+      .in(this)
+      .select("#splashRainCanvas")
+      .fields({ node: true, size: true })
+      .exec((res) => {
+        const info = res && res[0];
+        if (!info || !info.node || !this.splashRain) return;
+        this.splashRain.mount(info.node, { width: info.width, height: info.height }, {
+          late: !!late,
+          lowPower: !!this.data.lowPower,
+        });
+      });
+  },
+
+  stopSplashRain() {
+    if (this.splashRain) {
+      this.splashRain.destroy();
+      this.splashRain = null;
+    }
   },
 
   beginSplash() {
     if (this.splashStarted) return;
     if (!app.globalData.splashPending) {
       this.splashStarted = true;
-      if (!this.data.messages.length && !this.splashDone) {
+      if (!this.noteSpoken && !this.splashDone) {
         this.splashDone = true;
         this.speak(OPENING, 200);
       }
@@ -204,8 +337,11 @@ Page({
     }
     this.splashStarted = true;
     if (this.splashWait) clearTimeout(this.splashWait);
-    this.applySplashPick(this.splashPick());
-    this.setData({ splashShow: true, splashOn: true });
+    const pick = this.splashPick();
+    // 先挂开屏节点，再绑 canvas 雨（否则 #splashRainCanvas 还不在树里）
+    this.setData({ splashShow: true, splashOn: true }, () => {
+      this.applySplashPick(pick);
+    });
     if (wx.vibrateShort) wx.vibrateShort({ type: "light" });
     this.splashHide = setTimeout(() => this.finishSplash(), 4200);
   },
@@ -223,8 +359,9 @@ Page({
     this.splashRainHero = null;
     this.setData({ splashLeave: true });
     setTimeout(() => {
-      this.setData({ splashShow: false, splashRain: null });
-      if (!this.data.messages.length) this.speak(OPENING, 200);
+      this.stopSplashRain();
+      this.setData({ splashShow: false, splashRainOn: false });
+      if (!this.noteSpoken) this.speak(OPENING, 200);
     }, 460);
   },
 
@@ -237,39 +374,22 @@ Page({
     }
   },
 
-  scheduleNod() {
-    const wait = 5000 + Math.round(Math.random() * 3000);
-    this.nodTimer = setTimeout(() => {
-      const idle = !this.data.sending && !this.data.focused && !this.data.recording;
-      if (idle && (this.data.pose === "listen" || this.data.pose === "nap")) {
-        this.setData({ pose: "nod" });
-        this.poseTimer = setTimeout(() => {
-          if (this.data.pose === "nod") {
-            this.setData({ pose: this.data.scene.period === "noon" ? "nap" : "listen" });
-          }
-        }, 800);
-      }
-      this.scheduleNod();
-    }, wait);
-  },
-
-  wakeOtter() {
-    if (this.data.scene.period !== "noon") return;
-    this.setData({ pose: "wake" });
-    this.poseTimer = setTimeout(() => this.setData({ pose: "listen" }), 900);
-  },
-
+  /** 与网页一致：focus→listen；空→idle；有字→listen */
   onFocus() {
-    this.setData({ pose: "lean", focused: true });
+    this.setData({ focused: true });
+    if (!this.poseBusy) this.setPose("listen");
   },
 
   onBlur() {
     this.setData({ focused: false });
-    if (!this.data.sending) this.setData({ pose: "listen" });
+    if (!this.poseBusy && !(this.data.draft || "").trim()) this.setPose("idle");
   },
 
   onInput(e) {
-    this.setData({ draft: e.detail.value, pose: "lean" });
+    const draft = e.detail.value;
+    this.setData({ draft });
+    if (this.poseBusy) return;
+    this.setPose((draft || "").trim() ? "listen" : "idle");
   },
 
   openSettings() {
@@ -288,20 +408,35 @@ Page({
     this.syncSound();
   },
 
+  /** 5: 用户发言 → mote，不进气泡 */
+  spawnMotes() {
+    const list = [];
+    for (let i = 0; i < 8; i += 1) {
+      list.push({
+        id: `${Date.now()}-${i}`,
+        left: 40 + Math.round(Math.random() * 220),
+        top: 520 + Math.round(Math.random() * 40),
+        delay: (Math.random() * 0.25).toFixed(2),
+      });
+    }
+    this.setData({ motes: list });
+    setTimeout(() => this.setData({ motes: [] }), 1600);
+  },
+
   onSend() {
     const message = (this.data.draft || "").trim();
-    if (!message || this.data.sending || this.data.ghost) return;
+    if (!message || this.data.sending || this.poseBusy) return;
     sound.arm();
     this.syncSound();
     this.setData({ draft: "" });
-    this.releaseWords(message, false, false);
+    this.releaseWords(message);
   },
 
   startRecord() {
-    if (this.data.sending || this.data.ghost) return;
+    if (this.data.sending || this.poseBusy) return;
     sound.arm();
     this.recordCancelled = false;
-    this.setData({ recording: true, recordSec: 0, pose: "lean" });
+    this.setPose("listen", { recording: true, recordSec: 0 });
     this.recordTimer = setInterval(() => {
       const next = this.data.recordSec + 1;
       this.setData({ recordSec: next });
@@ -318,7 +453,7 @@ Page({
   cancelRecord() {
     this.recordCancelled = true;
     if (this.recordTimer) clearInterval(this.recordTimer);
-    this.setData({ recording: false, pose: "listen" });
+    this.setPose("idle", { recording: false });
     this.recorder.stop();
   },
 
@@ -326,19 +461,16 @@ Page({
     if (this.recordTimer) clearInterval(this.recordTimer);
     this.setData({ recording: false });
     if (this.recordCancelled) return;
-    const longVoice = (res.duration || 0) > 30000;
-    this.setData({ ghost: { phase: "show", text: "", wave: true } });
     this.transcribe(res.tempFilePath).then((text) => {
       const heard = (text || "").trim();
       if (!heard) {
-        this.setData({ ghost: null, pose: "listen" });
+        this.setPose("idle");
         this.speak("风有点大，我没听清。你打字告诉我也一样。", 200);
         return;
       }
-      this.setData({ ghost: { phase: "show", text: heard, wave: false } });
-      this.releaseWords(heard, true, longVoice);
+      this.releaseWords(heard);
     }).catch(() => {
-      this.setData({ ghost: null, pose: "listen" });
+      this.setPose("idle");
       this.speak("风有点大，我没听清。你打字告诉我也一样。", 200);
     });
   },
@@ -365,13 +497,14 @@ Page({
     });
   },
 
-  releaseWords(message, alreadyShown, longVoice) {
-    if (!alreadyShown) this.setData({ ghost: { phase: "show", text: message, wave: false } });
-    this.setData({ sending: true, pose: "lean" });
-    const started = Date.now();
-    this.ghostTimer = setTimeout(() => {
-      this.setData({ pose: longVoice ? "hold" : "think", ghost: Object.assign({}, this.data.ghost, { phase: "scatter" }) });
-    }, 2500);
+  /**
+   * 与网页 chat() 对齐：
+   * mote → think → (API) → write → look → 便签打字 → playPresence → look
+   */
+  releaseWords(message) {
+    this.spawnMotes();
+    this.poseBusy = true;
+    this.setPose("think", { sending: true });
     wx.request({
       url: `${app.globalData.apiBase}/api/chat`,
       method: "POST",
@@ -380,77 +513,104 @@ Page({
       data: {
         session_id: app.globalData.sessionId,
         message,
-        long_voice: !!longVoice,
         period: this.data.scene.period,
       },
       success: (res) => {
         if (res.statusCode >= 400) {
-          this.replyQueue = { text: (res.data && res.data.detail) || "请求失败", presence: "listen" };
+          this.finishChatCycle((res.data && res.data.detail) || "请求失败", null);
           return;
         }
         app.globalData.sessionId = res.data.session_id;
-        let presence = res.data.presence || "listening";
-        if (presence === "comfort") this.comfortStreak += 1;
-        else if (presence !== "warmth") this.comfortStreak = 0;
-        if (this.comfortStreak >= 2) presence = "warmth";
-        this.replyQueue = { text: res.data.reply, presence };
+        this.finishChatCycle(res.data.reply, res.data.presence || "listening");
       },
       fail: () => {
-        this.replyQueue = { text: "暂时连不上。", presence: "listening" };
-      },
-      complete: () => {
-        const wait = Math.max(0, 4500 - (Date.now() - started));
-        setTimeout(() => this.showReply(), wait);
+        this.finishChatCycle("暂时连不上。", null);
       },
     });
   },
 
-  showReply() {
-    const queued = this.replyQueue || { text: "我在。", presence: "listening" };
-    this.replyQueue = null;
-    this.setData({ ghost: null, sending: false });
-    this.applyPresence(queued.presence);
-    this.speak(queued.text, queued.presence === "hold" ? 500 : 200);
+  finishChatCycle(text, presence) {
+    const run = async () => {
+      try {
+        if (presence != null) {
+          await this.setPose("write");
+          this.setPose("look");
+          await this.speakAsync(text || "我在。");
+          await this.playPresence(presence);
+        } else {
+          this.setPose("look");
+          await this.speakAsync(text || "我在。");
+        }
+      } finally {
+        this.poseBusy = false;
+        this.setData({ sending: false });
+        if (!(this.data.draft || "").trim()) this.setPose("look");
+      }
+    };
+    run();
   },
 
-  applyPresence(presence) {
-    const pose = presence === "listening" ? "listen" : presence;
-    this.setData({ pose, fireBoost: presence === "warmth" });
-    if (this.poseTimer) clearTimeout(this.poseTimer);
-    const back = presence === "comfort" ? 2600 : 1800;
-    this.poseTimer = setTimeout(() => {
-      if (!this.data.sending && !this.data.focused) {
-        this.setData({
-          pose: this.data.scene.period === "noon" ? "nap" : "listen",
-          fireBoost: false,
-        });
-      }
-    }, back);
+  /** 网页 playPresence：无独立同意/安慰片，回 look */
+  playPresence(presence) {
+    this.setPose(moodFor(presence));
+    return Promise.resolve();
   },
 
   speak(full, delay) {
-    const id = this.data.nextId;
-    this.setData({
-      messages: this.data.messages.concat({ id, text: "", typing: true }),
-      nextId: id + 1,
-      anchor: `m-${id}`,
-    });
-    setTimeout(() => this.typeInto(id, full), delay || 0);
+    this.speakAsync(full, delay);
   },
 
-  typeInto(id, full) {
+  speakAsync(full, delay) {
+    this.noteSpoken = true;
     if (this.typeTimer) clearInterval(this.typeTimer);
-    let i = 0;
-    this.typeTimer = setInterval(() => {
-      i += 1;
-      const messages = this.data.messages.map((item) => (
-        item.id === id ? Object.assign({}, item, { typing: false, text: full.slice(0, i) }) : item
-      ));
-      this.setData({ messages, anchor: `m-${id}` });
-      if (i >= full.length) {
-        clearInterval(this.typeTimer);
-        this.typeTimer = null;
-      }
-    }, 30);
+    this.setData({
+      noteAway: false,
+      noteText: "",
+      noteTransform: "",
+    });
+    if (!this.poseBusy) this.setPose("look");
+    const text = full || "";
+    return new Promise((resolve) => {
+      const start = () => {
+        let i = 0;
+        this.typeTimer = setInterval(() => {
+          i += 1;
+          this.setData({ noteText: text.slice(0, i) });
+          if (i >= text.length) {
+            clearInterval(this.typeTimer);
+            this.typeTimer = null;
+            if (!this.poseBusy && !this.data.sending && !(this.data.draft || "").trim()) {
+              this.setPose("idle");
+            }
+            resolve();
+          }
+        }, 30);
+      };
+      if (delay) setTimeout(start, delay);
+      else start();
+    });
+  },
+
+  onNoteTouchStart(e) {
+    if (!e.touches || !e.touches[0]) return;
+    this.dragY = e.touches[0].clientY;
+  },
+
+  onNoteTouchMove(e) {
+    if (!this.dragY || !e.touches || !e.touches[0]) return;
+    const dy = Math.max(0, e.touches[0].clientY - this.dragY);
+    this.setData({ noteTransform: `translateY(${dy}px) rotate(-1.2deg)` });
+  },
+
+  onNoteTouchEnd(e) {
+    if (!this.dragY) return;
+    const y = (e.changedTouches && e.changedTouches[0] && e.changedTouches[0].clientY) || this.dragY;
+    const dy = y - this.dragY;
+    this.dragY = 0;
+    if (dy > 72) {
+      this.setData({ noteAway: true, noteTransform: "" });
+    } else {
+      this.setData({ noteTransform: "" });
+    }
   },
 });

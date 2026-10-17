@@ -1,10 +1,10 @@
 /**
- * ?pose=write / ?pose=agree
+ * ?pose=write
  * 页面主脚本若没跑起来（例如内联脚本被拦），仍要播一次动作再回待机。
  */
 (function () {
   const pose = new URLSearchParams(location.search).get("pose");
-  if (pose !== "write" && pose !== "agree") return;
+  if (pose !== "write") return;
   if (window.__echoBoot) return;
 
   const valley = document.getElementById("valley");

@@ -1,7 +1,10 @@
 /* —— 舞台：深蓝紫深空 + 暖金微光 —— */
+page { height: 100%; background: #0a0818; }
 .stage {
   position: relative;
-  min-height: 100vh;
+  width: 100%;
+  height: 100vh;
+  min-height: 100%;
   overflow: hidden;
   color: #e8e0f5;
   background: #0a0818;
@@ -9,7 +12,7 @@
 
 .stage__bg {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   background:
     radial-gradient(ellipse 90% 60% at 50% 42%, rgba(72, 48, 120, 0.55), transparent 68%),
     radial-gradient(ellipse 50% 35% at 20% 75%, rgba(40, 55, 120, 0.35), transparent 70%),
@@ -83,7 +86,7 @@
 /* 金色微光粒子 */
 .particles {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   pointer-events: none;
   z-index: 1;
 }
@@ -116,14 +119,14 @@
   left: 50%;
   top: 43%;
   transform: translate(-50%, -50%);
-  width: min(78vw, 49.5vh, 580rpx);
-  height: min(104vw, 66vh, 773rpx);
+  width: 560rpx;
+  height: 746rpx;
   z-index: 3;
 }
 
 .book-anchor--flipping {
-  width: min(84vw, 51vh, 620rpx);
-  height: min(112vw, 68vh, 827rpx);
+  width: 600rpx;
+  height: 800rpx;
 }
 
 /* —— 书籍：填满锚点 —— */
@@ -145,7 +148,7 @@
 
 .book {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
@@ -244,7 +247,7 @@
 
 .book__frame {
   position: absolute;
-  inset: 28rpx 24rpx 28rpx 36rpx;
+  top: 28rpx; right: 24rpx; bottom: 28rpx; left: 36rpx;
   border: 1rpx solid rgba(226, 196, 138, 0.35);
   border-radius: 8rpx;
   pointer-events: none;
@@ -253,7 +256,7 @@
 /* 烫金扫光 */
 .book__foil {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   background: linear-gradient(
     115deg,
     transparent 32%,
@@ -326,7 +329,7 @@
 /* —— 翻页：3D 透视 + 纸张厚度 + 阴影变化 —— */
 .flip {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   width: 100%;
   height: 100%;
   display: flex;
@@ -347,13 +350,13 @@
 /* 下层书页：叠出厚度 */
 .flip__bed {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   transform-style: preserve-3d;
 }
 
 .flip__bed-page {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   border-radius: 8rpx 16rpx 16rpx 8rpx;
   background:
     linear-gradient(105deg, rgba(255, 255, 255, 0.25) 0%, transparent 30%),
@@ -392,13 +395,13 @@
 
 .flip__stack {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   transform-style: preserve-3d;
 }
 
 .flip__leaf {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   transform-origin: left center;
   transform-style: preserve-3d;
   --flip-ms: 400ms;
@@ -458,7 +461,7 @@
 
 .flip__sheet {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   transform-style: preserve-3d;
   border-radius: 8rpx 16rpx 16rpx 8rpx;
 }
@@ -506,7 +509,7 @@
 
 .flip__face {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   border-radius: 8rpx 16rpx 16rpx 8rpx;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -564,7 +567,7 @@
 /* 纸面纹理 */
 .flip__grain {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   opacity: 0.18;
   background-image:
     radial-gradient(rgba(90, 70, 40, 0.15) 0.6px, transparent 0.7px);
@@ -577,7 +580,7 @@
 /* 翻页高光扫过纸面 */
 .flip__sheen {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   background: linear-gradient(
     100deg,
     transparent 30%,
@@ -805,7 +808,7 @@
 
 .result__shine {
   position: absolute;
-  inset: -8rpx -24rpx;
+  top: -8rpx; right: -24rpx; bottom: -8rpx; left: -24rpx;
   background: linear-gradient(
     105deg,
     transparent 30%,

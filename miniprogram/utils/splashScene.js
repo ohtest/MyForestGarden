@@ -289,16 +289,19 @@ const PERIOD_LIGHT = {
   },
 };
 
-/** API sky → 五天气（表驱动，无分支链） */
+/**
+ * API sky → 开屏五卡（艺术资源只有 clear/cloudy/rain/wind/fog）
+ * partly 保留偏晴→clear；storm 走雨卡；snow 暂无雪卡，走阴+冷 veil 用 cloudy
+ */
 const SKY_TO_WEATHER = {
   clear: "clear",
   sunny: "clear",
   heat: "clear",
-  partly: "cloudy",
+  partly: "clear",
   cloudy: "cloudy",
   rain: "rain",
   storm: "rain",
-  snow: "rain",
+  snow: "cloudy",
   fog: "fog",
   mist: "fog",
   wind: "wind",

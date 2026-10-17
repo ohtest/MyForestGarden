@@ -96,11 +96,15 @@ const PERIODS = [
   },
 ];
 
+/** 与网页天气细粒度对齐：clear / partly / cloudy / fog / rain / storm / snow */
 const WEATHERS = [
   { id: "clear", tint: "none", tintOpacity: 0, particles: "none", sounds: [], outfitOverride: "", campfireOverride: "" },
-  { id: "rain", tint: "rain", tintOpacity: 0.32, particles: "rain", sounds: ["rain"], outfitOverride: "umbrella", campfireOverride: "" },
-  { id: "snow", tint: "snow", tintOpacity: 0.3, particles: "snow", sounds: ["wind"], outfitOverride: "knit", campfireOverride: "full" },
+  { id: "partly", tint: "none", tintOpacity: 0.08, particles: "none", sounds: [], outfitOverride: "", campfireOverride: "" },
   { id: "cloudy", tint: "cloud", tintOpacity: 0.26, particles: "none", sounds: [], outfitOverride: "", campfireOverride: "" },
+  { id: "fog", tint: "cloud", tintOpacity: 0.4, particles: "none", sounds: [], outfitOverride: "", campfireOverride: "" },
+  { id: "rain", tint: "rain", tintOpacity: 0.32, particles: "rain", sounds: ["rain"], outfitOverride: "umbrella", campfireOverride: "" },
+  { id: "storm", tint: "rain", tintOpacity: 0.42, particles: "rain", sounds: ["rain"], outfitOverride: "umbrella", campfireOverride: "" },
+  { id: "snow", tint: "snow", tintOpacity: 0.3, particles: "snow", sounds: ["wind"], outfitOverride: "knit", campfireOverride: "full" },
 ];
 
 const RAIN_SHELTER = {
@@ -135,19 +139,22 @@ function mergeRules(period, weather) {
     outfit = weather.outfitOverride || outfit;
   }
 
-  if (weather.id === "rain") {
+  const wet = weather.id === "rain" || weather.id === "storm";
+  if (wet) {
     shelter = RAIN_SHELTER[period.id];
     if (!evening) campfire = "brazier";
     outfit = shelter ? "cloak" : (weather.outfitOverride || "umbrella");
   }
 
-  if (weather.campfireOverride && weather.id !== "rain") {
+  if (weather.campfireOverride && !wet) {
     if (campfire === "none" || campfire === "small") campfire = weather.campfireOverride;
   }
 
   if (campfire !== "none" && evening) lightSource = "fire";
 
   const layers = Object.assign({ notebook: true, quill: true }, OUTFITS[outfit] || {});
+  // 地面档位与网页 paintValley 对齐：雪 / 下午金草 / 其余草
+  const ground = weather.id === "snow" ? "snow" : (period.id === "afternoon" ? "gold" : "grass");
   return {
     period: period.id,
     label: period.label,
@@ -155,7 +162,7 @@ function mergeRules(period, weather) {
     scene: period.scene,
     sky: period.sky,
     sunAngle: period.sunAngle,
-    ground: weather.id === "snow" ? "snow" : period.ground,
+    ground,
     lightSource,
     campfire,
     shelter,
@@ -189,9 +196,11 @@ function periodOf(hour) {
 }
 
 function weatherKeyOf(sky) {
-  if (sky === "snow") return "snow";
-  if (sky === "rain" || sky === "storm") return "rain";
-  if (sky === "cloudy" || sky === "fog" || sky === "partly") return "cloudy";
+  if (sky === "mist") return "fog";
+  if (sky === "sunny" || sky === "heat") return "clear";
+  if (["clear", "partly", "cloudy", "fog", "rain", "storm", "snow"].indexOf(sky) >= 0) {
+    return sky;
+  }
   return "clear";
 }
 
