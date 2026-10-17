@@ -545,11 +545,11 @@
           <div class="otter">
             <i class="shadow"></i>
             <div class="actor" id="actor">
-              <img class="actor-still" src="/art/tuantuan/tuantuan-wizard-ref.png?v=stand11" alt="团团" />
-              <video data-clip="idle" src="/art/tuantuan/clips/idle.mp4?v=clip5" poster="/art/tuantuan/tuantuan-wizard-ref.png?v=stand11" muted playsinline loop preload="auto"></video>
-              <video data-clip="write" src="/art/tuantuan/clips/write.mp4?v=clip7" poster="/art/tuantuan/tuantuan-wizard-ref.png?v=stand11" muted playsinline webkit-playsinline preload="auto"></video>
-              <video data-clip="agree" src="/art/tuantuan/clips/agree.mp4?v=clip6" poster="/art/tuantuan/tuantuan-wizard-ref.png?v=stand11" muted playsinline webkit-playsinline preload="auto"></video>
-              <video data-clip="comfort" src="/art/tuantuan/clips/comfort.mp4?v=clip5" poster="/art/tuantuan/tuantuan-wizard-ref.png?v=stand11" muted playsinline preload="none"></video>
+              <img class="actor-still" src="/art/tuantuan/tuantuan-wizard-ref.png?v=stand13" alt="团团" />
+              <video data-clip="idle" src="/art/tuantuan/clips/idle.mp4?v=clip10" poster="/art/tuantuan/tuantuan-wizard-ref.png?v=stand12" muted playsinline loop preload="auto"></video>
+              <video data-clip="write" src="/art/tuantuan/clips/write.mp4?v=clip10" poster="/art/tuantuan/tuantuan-wizard-ref.png?v=stand12" muted playsinline webkit-playsinline preload="auto"></video>
+              <video data-clip="agree" src="/art/tuantuan/clips/agree.mp4?v=clip10" poster="/art/tuantuan/tuantuan-wizard-ref.png?v=stand12" muted playsinline webkit-playsinline preload="auto"></video>
+              <video data-clip="comfort" src="/art/tuantuan/clips/comfort.mp4?v=clip10" poster="/art/tuantuan/tuantuan-wizard-ref.png?v=stand12" muted playsinline preload="none"></video>
               <canvas class="actor-stage" id="actorStage"></canvas>
               <div class="glyphs" aria-hidden="true"><span class="think">……</span></div>
             </div>
@@ -745,31 +745,68 @@
       return (b > 40 || r > 40) && (r + b) > g + 20 && g < 160;
     }
 
-    // 领口绿缝只补绿像素，不动暗色（避免伤到眼睛）。
+    // 定点补领口：金星右侧、下巴下方的横向绿缝（素材坐标约 x70–86%、y49–62%）。
     function sealGreenCracks(d, w, h) {
       const src = new Uint8ClampedArray(d);
-      const y0 = (h * 0.24) | 0, y1 = (h * 0.48) | 0;
-      const x0 = (w * 0.45) | 0, x1 = (w * 0.88) | 0;
-      for (let y = Math.max(2, y0); y < Math.min(h - 2, y1); y++) {
-        for (let x = Math.max(2, x0); x < Math.min(w - 2, x1); x++) {
-          const i = (y * w + x) * 4;
-          if (!isGreen(src[i], src[i + 1], src[i + 2])) continue;
-          let sr = 0, sg = 0, sb = 0, n = 0;
-          for (let dy = -2; dy <= 2; dy++) {
-            for (let dx = -2; dx <= 2; dx++) {
-              if (!dx && !dy) continue;
-              const j = ((y + dy) * w + (x + dx)) * 4;
-              if (isCloak(src[j], src[j + 1], src[j + 2])) {
-                sr += src[j]; sg += src[j + 1]; sb += src[j + 2]; n++;
+      const bands = [
+        [(w * 0.70) | 0, (w * 0.88) | 0, (h * 0.48) | 0, (h * 0.63) | 0],
+        [(w * 0.62) | 0, (w * 0.90) | 0, (h * 0.45) | 0, (h * 0.66) | 0],
+      ];
+      for (const [x0, x1, y0, y1] of bands) {
+        for (let y = Math.max(2, y0); y < Math.min(h - 2, y1); y++) {
+          for (let x = Math.max(2, x0); x < Math.min(w - 2, x1); x++) {
+            const i = (y * w + x) * 4;
+            if (!isGreen(src[i], src[i + 1], src[i + 2])) continue;
+            let sr = 0, sg = 0, sb = 0, n = 0;
+            for (let dy = -4; dy <= 4; dy++) {
+              for (let dx = -4; dx <= 4; dx++) {
+                if (!dx && !dy) continue;
+                const j = ((y + dy) * w + (x + dx)) * 4;
+                if (isCloak(src[j], src[j + 1], src[j + 2])) {
+                  sr += src[j]; sg += src[j + 1]; sb += src[j + 2]; n++;
+                }
               }
             }
-          }
-          if (n >= 6) {
-            d[i] = (sr / n) | 0;
-            d[i + 1] = (sg / n) | 0;
-            d[i + 2] = (sb / n) | 0;
+            if (n >= 6) {
+              d[i] = (sr / n) | 0;
+              d[i + 1] = (sg / n) | 0;
+              d[i + 2] = (sb / n) | 0;
+            }
           }
         }
+      }
+    }
+
+    // 抠绿后：把被掏穿的细缝用周围不透明像素补回。
+    function fillKeyedHoles(d, w, h) {
+      const src = new Uint8ClampedArray(d);
+      for (let pass = 0; pass < 3; pass++) {
+        let changed = 0;
+        const cur = pass ? new Uint8ClampedArray(d) : src;
+        for (let y = 2; y < h - 2; y++) {
+          for (let x = 2; x < w - 2; x++) {
+            const i = (y * w + x) * 4;
+            if (cur[i + 3] > 20) continue;
+            let sr = 0, sg = 0, sb = 0, n = 0;
+            for (let dy = -2; dy <= 2; dy++) {
+              for (let dx = -2; dx <= 2; dx++) {
+                if (!dx && !dy) continue;
+                const j = ((y + dy) * w + (x + dx)) * 4;
+                if (cur[j + 3] < 180) continue;
+                if (isGreen(cur[j], cur[j + 1], cur[j + 2])) continue;
+                sr += cur[j]; sg += cur[j + 1]; sb += cur[j + 2]; n++;
+              }
+            }
+            if (n >= 10) {
+              d[i] = (sr / n) | 0;
+              d[i + 1] = (sg / n) | 0;
+              d[i + 2] = (sb / n) | 0;
+              d[i + 3] = 255;
+              changed++;
+            }
+          }
+        }
+        if (!changed) break;
       }
     }
 
@@ -780,6 +817,7 @@
       sctx.drawImage(video, 0, 0, w, h);
       const img = sctx.getImageData(0, 0, w, h);
       const d = img.data;
+      sealGreenCracks(d, w, h);
       sealGreenCracks(d, w, h);
       sealGreenCracks(d, w, h);
       const seen = new Uint8Array(w * h);
@@ -802,20 +840,20 @@
         const y = (p / w) | 0;
         push(x + 1, y); push(x - 1, y); push(x, y + 1); push(x, y - 1);
       }
-      for (let pass = 0; pass < 2; pass++) {
-        for (let y = 1; y < h - 1; y++) {
-          for (let x = 1; x < w - 1; x++) {
-            const p = y * w + x;
-            const i = p * 4;
-            if (d[i + 3] === 0) continue;
-            const r = d[i], g = d[i + 1], b = d[i + 2];
-            if (!(g > r + 18 && g > b + 18 && g > 110)) continue;
-            const edge = d[(p - 1) * 4 + 3] === 0 || d[(p + 1) * 4 + 3] === 0 || d[(p - w) * 4 + 3] === 0 || d[(p + w) * 4 + 3] === 0;
-            if (edge) d[i + 3] = 0;
-            else d[i + 1] = Math.min(g, (r + b) >> 1);
-          }
+      // 边缘去绿只吃最外一圈，避免把领口细缝继续掏大。
+      for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+          const p = y * w + x;
+          const i = p * 4;
+          if (d[i + 3] === 0) continue;
+          const r = d[i], g = d[i + 1], b = d[i + 2];
+          if (!(g > r + 22 && g > b + 22 && g > 125)) continue;
+          const edge = d[(p - 1) * 4 + 3] === 0 || d[(p + 1) * 4 + 3] === 0 || d[(p - w) * 4 + 3] === 0 || d[(p + w) * 4 + 3] === 0;
+          if (edge) d[i + 3] = 0;
+          else d[i + 1] = Math.min(g, (r + b) >> 1);
         }
       }
+      fillKeyedHoles(d, w, h);
       if (alpha < 0.99) {
         for (let i = 3; i < d.length; i += 4) d[i] = (d[i] * alpha) | 0;
       }
@@ -1710,6 +1748,7 @@
     setInterval(loadWeather, 30 * 60 * 1000);
     setTimeout(beginSplash, previewPose ? 0 : 900);
   </script>
-  <script src="/js/posePreview.js?v=2"></script>
+  <script src="/js/actorBoot.js?v=1"></script>
+  <script src="/js/posePreview.js?v=4"></script>
 </body>
 </html>
